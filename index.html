@@ -60,22 +60,22 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
-  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Self-custodied BTC is the benchmark: one coin stays one coin, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR provides superior returns compared to holding self-custody Bitcoin, after a counterparty-risk hurdle. It runs a Monte Carlo over the Bitcoin price — under your choice of three models (power law, diminishing returns, or GBM), each anchored to its own estimate of today's fair value — and the short policy rate (SOFR), then propagates Strategy's full capital structure (an endogenous floating-preferred dividend, convertibles resolving at their put dates, a premium-scaled accretive equity program, and a strict financing waterfall) to a <b>fair premium</b>: the mNAV at which the equity beats self-custody half the time. Here mNAV is Strategy's equity market capitalization — the MSTR share price times diluted shares outstanding — divided by the total dollar value of all the Bitcoin the company holds. The market and balance-sheet fields come pre-filled with a starting snapshot — overwrite them with current values before relying on the output — and <b>your job is to set the horizon, the hurdle, and which Bitcoin model you believe.</b></p>
+  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Self-custodied BTC is the benchmark: one coin stays one coin, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR provides superior returns compared to holding self-custody Bitcoin, after a counterparty-risk hurdle. It runs a Monte Carlo over the Bitcoin price — under your choice of three models (power law, diminishing returns, or GBM), each anchored to its own estimate of today's fair value — and the short policy rate (SOFR), then propagates Strategy's full capital structure (an endogenous floating-preferred dividend, convertibles resolving at their put dates, a premium-scaled accretive equity program, and a strict financing waterfall) to a <b>fair premium</b>: the mNAV at which the equity beats self-custody half the time. Here mNAV is Strategy's equity market capitalization — the MSTR share price times diluted shares outstanding — divided by the total dollar value of all the Bitcoin the company holds. The market and balance-sheet fields come pre-filled with a starting snapshot — overwrite them with current values — and <b>your job is to set the horizon, the hurdle, and which Bitcoin model you believe.</b></p>
   <p style="margin:-8px 0 18px;font-size:13.5px;"><a href="whitepaper.pdf" target="_blank" rel="noopener" style="color:var(--mstr);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;">📄&nbsp; Read the full white paper (PDF) &rarr;</a></p>
 
   <section>
-    <div class="seclabel">Market snapshot — editable per latest info</div>
+    <div class="seclabel">Market snapshot</div>
     <div class="grid">
-      <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="62650"></div>
-      <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62457"></div>
-      <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="98"></div>
-      <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="87.31"></div>
+      <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59400"></div>
+      <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62850"></div>
+      <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="85"></div>
+      <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="74"></div>
       <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="386052000"></div>
     </div>
   </section>
 
   <section>
-    <div class="seclabel">Strategy balance sheet — editable per latest info</div>
+    <div class="seclabel">Strategy balance sheet</div>
     <div class="grid">
       <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
       <div class="f"><label>Preferred par @ liq-pref (USD)</label><input id="prefPar" value="15500000000"></div>
@@ -171,13 +171,8 @@
     <div class="scalelegend" style="margin-top:6px"><span>annualized return vs holding BTC →</span><span id="medlbl"></span></div>
   </section>
 
-  <p class="foot" id="foot">
-    <b>Power-law fair value auto-computes from the current date</b> (Porkopolis fit, 1.6×10⁻¹⁷ · days^5.77) — it stays current with no input. <b>The market and balance-sheet fields are a static snapshot</b> (BTC held, shares, preferred par, coupon, reserve, and the three prices), sourced from Strategy's SEC filings and public trackers. A browser tool can't live-fetch these (no public CORS APIs), so overwrite them with current values before relying on the output. Preferred par (~$15.5B aggregate liquidation preference across STRF/STRC/STRK/STRD/STRE — five series) and the blended coupon are issuer-reported / estimated — verify against the most recent 10-Q.<br><br>
-    This assesses simulated outcomes <b>under your selected Bitcoin model</b> (each a contested prior about future prices, with its own estimate of today's fair value). The verdict is only as sound as your inputs and that assumption. BTC self-custody is the numeraire (0% BTC-denominated return); MSTR must clear your counterparty hurdle to win. No CAMT (Treasury interim guidance excludes unrealized crypto gains). No forced BTC sale — preferred dividends pause and accrue.
-  </p>
-
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
-    <b>Disclaimer.</b> This tool is provided for educational and informational purposes only. It does not constitute financial, investment, tax, or legal advice, nor a recommendation or solicitation to buy or sell any security or asset, including MSTR shares, Strategy's preferred securities, or Bitcoin. Every figure it produces is the conditional output of user-supplied assumptions and stylized parameters, is not a forecast, and may differ materially from realized outcomes. Markets involve risk of loss. Conduct your own due diligence and consult a qualified, licensed professional before making any investment decision.
+    <b>Disclaimer.</b> This tool is provided for educational and informational purposes only. It does not constitute financial, investment, tax, or legal advice, nor a recommendation or solicitation to buy or sell any security or asset, including MSTR shares, Strategy's preferred securities, or Bitcoin. Every figure it produces is the conditional output of user-supplied assumptions and stylized parameters, is not a forecast, and may differ materially from realized outcomes. Markets involve risk of loss. Conduct your own due diligence and consult a qualified, licensed professional before making any investment decision. This decision tool is itself a work in progress and is likely to change as new learnings arise, the modeling improves, and strategies evolve.
   </p>
 </div>
 
@@ -586,5 +581,6 @@ $('run').addEventListener('click',()=>{
   },30);
 });
 </script>
+  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "775dfd21de2c496b9190612266e25980"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
