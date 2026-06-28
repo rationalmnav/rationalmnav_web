@@ -29,6 +29,7 @@
   .scale .mstrfill{background:linear-gradient(90deg,#2b8fa8,var(--mstr));}
   .scale .btcfill{background:linear-gradient(90deg,var(--btc),#b96a12);}
   .scalelegend{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .charthelp{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:8px;}
   .scalelegend .m{color:var(--mstr)} .scalelegend .b{color:var(--btc)}
   section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
   .seclabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
@@ -51,7 +52,7 @@
   .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;}
   .stat .k{font-size:11px;color:var(--muted);} .stat .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:2px;}
   .stat .v.pos{color:var(--good)} .stat .v.neg{color:var(--btc)}
-  canvas{width:100%;height:180px;display:block;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);}
+  canvas{width:100%;height:210px;display:block;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);}
   .foot{color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:14px;}
   .pill{font-family:var(--mono);font-size:10.5px;color:var(--btc);border:1px solid var(--line);border-radius:5px;padding:1px 6px;}
 </style>
@@ -60,36 +61,14 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
-  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Self-custodied BTC is the benchmark: one coin stays one coin, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR provides superior returns compared to holding self-custody Bitcoin, after a counterparty-risk hurdle. It runs a Monte Carlo over the Bitcoin price — under your choice of three models (power law, diminishing returns, or GBM), each anchored to its own estimate of today's fair value — and the short policy rate (SOFR), then propagates Strategy's full capital structure (an endogenous floating-preferred dividend, convertibles resolving at their put dates, a premium-scaled accretive equity program, and a strict financing waterfall) to a <b>fair premium</b>: the mNAV at which the equity beats self-custody half the time. Here mNAV is Strategy's equity market capitalization — the MSTR share price times diluted shares outstanding — divided by the total dollar value of all the Bitcoin the company holds. The market and balance-sheet fields come pre-filled with a starting snapshot — overwrite them with current values — and <b>your job is to set the horizon, the hurdle, and which Bitcoin model you believe.</b></p>
+  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Self-custodied BTC is the benchmark: one coin stays one coin, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR provides superior returns compared to holding self-custody Bitcoin, after a counterparty-risk hurdle. <b>This hurdle is an annual rate that compounds over your horizon:</b> MSTR clears it only if its Bitcoin-denominated value at exit exceeds its entry value grown at the hurdle for the full holding period (a 5%/yr hurdle over 10 years is roughly a 63% Bitcoin-denominated gain). It can also be set <b>negative</b> — representing an investor who will accept a slightly lower Bitcoin-denominated return than self-custody in exchange for the wrapper's convenience (no key management, no recurring ETF fee) and trust in the company; a negative hurdle raises the fair mNAV. It runs a Monte Carlo over the Bitcoin price — under your choice of three models (power law, diminishing returns, or GBM), each anchored to its own estimate of today's fair value — and the short policy rate (SOFR), then propagates Strategy's full capital structure (an endogenous floating-preferred dividend, convertibles resolving at their put dates, a premium-scaled accretive equity program, and a strict financing waterfall) to a <b>fair premium</b>: the mNAV at which the equity beats self-custody half the time. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, and which Bitcoin model you believe.</b> Here mNAV is Strategy's equity market capitalization — the MSTR share price times diluted shares outstanding, divided by the total dollar value of all the Bitcoin the company holds. In the Assumptions section, the market and balance-sheet fields come pre-filled with a starting snapshot — check and edit them as needed to match current values.</p>
   <p style="margin:-8px 0 18px;font-size:13.5px;"><a href="whitepaper.pdf" target="_blank" rel="noopener" style="color:var(--mstr);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;">📄&nbsp; Read the full white paper (PDF) &rarr;</a></p>
-
-  <section>
-    <div class="seclabel">Market snapshot</div>
-    <div class="grid">
-      <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59400"></div>
-      <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62850"></div>
-      <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="85"></div>
-      <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="74"></div>
-      <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="386052000"></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="seclabel">Strategy balance sheet</div>
-    <div class="grid">
-      <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
-      <div class="f"><label>Preferred par @ liq-pref (USD)</label><input id="prefPar" value="15500000000"></div>
-      <div class="f"><label>Blended preferred coupon (%/yr)</label><input id="coupon" value="11"></div>
-      <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="1400000000"></div>
-    </div>
-    <div class="derived" id="derived"></div>
-  </section>
 
   <section>
     <div class="seclabel">Your decision frame</div>
     <div class="grid">
       <div class="f"><label>Holding horizon (years)</label><input id="horizon" value="10"></div>
-      <div class="f"><label>Counterparty risk hurdle vs self-custody (%/yr)</label><input id="rp" value="4.5"></div>
+      <div class="f"><label>Counterparty risk hurdle vs self-custody (%/yr, compounded over horizon; may be negative)</label><input id="rp" value="4.5"></div>
     </div>
     <div class="grid">
       <div class="f"><label>Bitcoin price model</label><select id="btcModel"><option value="powerlaw">Power Law (Santostasi) — bullish</option><option value="diminishing">Diminishing Returns — conservative</option><option value="gbm">GBM (random walk) — neutral/skeptic</option></select>
@@ -97,6 +76,23 @@
     </div>
     <details>
       <summary>Assumptions ▾</summary>
+      <div class="seclabel" style="margin-top:12px">Market snapshot</div>
+      <div class="grid">
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59400"></div>
+        <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62850"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="85"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="74"></div>
+        <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="386052000"></div>
+      </div>
+      <div class="seclabel" style="margin-top:12px">Strategy balance sheet</div>
+      <div class="grid">
+        <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
+        <div class="f"><label>Preferred par @ liq-pref (USD)</label><input id="prefPar" value="15500000000"></div>
+        <div class="f"><label>Blended preferred coupon (%/yr)</label><input id="coupon" value="11"></div>
+        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="1400000000"></div>
+      </div>
+      <div class="derived" id="derived"></div>
+      <div class="seclabel" style="margin-top:12px">Model parameters</div>
       <div class="grid" style="margin-top:10px">
         <div class="f"><label>Power-law exponent n</label><input id="expn" value="5.77"></div>
         <div class="f"><label>BTC relative vol now σ (log)</label><input id="sigNow" value="0.50"></div>
@@ -111,6 +107,8 @@
         <div class="f"><label>Reserve op. floor (months)</label><input id="resFloorM" value="3"></div>
         <div class="f"><label>Below-NAV ATM floor (mNAV)</label><input id="mnavAtmFloor" value="0.70"></div>
         <div class="f"><label>Below-NAV ATM cap (% BTC val/qtr)</label><input id="maxCommonAtm" value="3"></div>
+        <div class="f"><label>Last-resort BTC sale (sell BTC to fund dividend before pausing)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="btcForcedSaleOn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Last-resort BTC sale: max % of stack / qtr</label><input id="btcForcedSaleCapFrac" value="5"></div>
         <div class="f"><label>GBM drift μ (%/yr, log)</label><input id="gbmDrift" value="20"></div>
         <div class="f"><label>GBM vol σ (%/yr)</label><input id="gbmVol" value="55"></div>
         <div class="f"><label>Dim. returns: start CAGR (%)</label><input id="dimCagr0" value="30"></div>
@@ -127,9 +125,9 @@
         <div class="f"><label>Accretive ATM: pace × premium (slope)</label><input id="accretiveSlope" value="0.10"></div>
         <div class="f"><label>Accretive ATM: max % BTC value / qtr</label><input id="accretiveCap" value="12"></div>
         <div class="f"><label>SOFR / policy-rate model</label><select id="rateModel"><option value="vasicek">Vasicek (mean-reverting)</option><option value="cir">CIR (√r vol, no neg)</option><option value="randomwalk">Random walk (driftless)</option><option value="jumpdiff" selected>Jump-diffusion (fiscal shocks)</option></select></div>
-        <div class="f"><label>Soft repression (lean against rates above critical value)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="repressionOn" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Soft repression: critical SOFR value (%)</label><input id="repressionThreshold" value="4.5"></div>
-        <div class="f"><label>Soft repression: lean strength (/yr)</label><input id="repressionStrength" value="1.0"></div>
+        <div class="f"><label>Constrained policy rate (lean against SOFR above threshold)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="repressionOn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Constrained policy rate: threshold SOFR (%)</label><input id="repressionThreshold" value="4.5"></div>
+        <div class="f"><label>Constrained policy rate: lean strength (/yr)</label><input id="repressionStrength" value="1.0"></div>
         <div class="f"><label>Hard policy-rate cap</label><select id="yccTrigger"><option value="off">Off</option><option value="now">On now</option><option value="year">After year N</option><option value="breach">On breach (let it run, then pin)</option></select></div>
         <div class="f"><label>Cap level — SOFR pinned ≤ (%)</label><input id="yccCap" value="3.5"></div>
         <div class="f"><label>SOFR / policy rate now (%)</label><input id="ust10Now" value="3.62"></div>
@@ -137,8 +135,13 @@
         <div class="f"><label>Cap start year (if "after year N")</label><input id="yccStartYr" value="3"></div>
         <div class="f"><label>Cap breach level — SOFR trigger (%)</label><input id="yccBreach" value="6.0"></div>
         <div class="f"><label>SOFR–BTC shock correlation</label><input id="ust10Corr" value="0"></div>
-        <div class="f"><label>STRC base spread over SOFR (%)</label><input id="strcSpreadBase" value="4.5"></div>
-        <div class="f"><label>STRC spread × leverage (%)</label><input id="strcSpreadAmp" value="8"></div>
+        <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="11.5"></div>
+        <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="7.0"></div>
+        <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="4.0"></div>
+        <div class="f"><label>STRC spread × coverage sensitivity (%)</label><input id="strcCovSens" value="16"></div>
+        <div class="f"><label>STRC spread × volatility sensitivity (%)</label><input id="strcVolSens" value="9"></div>
+        <div class="f"><label>STRC coupon willingness ceiling (%)</label><input id="strcCmaxWilling" value="15"></div>
+        <div class="f"><label>STRC ex-div sawtooth amplitude ($)</label><input id="strcSawAmp" value="2.2"></div>
         <div class="f"><label>STRC rate ceiling (%)</label><input id="strcRateCeil" value="16"></div>
         <div class="f"><label>Credit-rating migration (seasons up, downgrades on pause)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="creditMigrationOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Max rating tightening (%, at full seasoning)</label><input id="creditMaxTighten" value="2.5"></div>
@@ -167,8 +170,9 @@
   <section id="results" style="display:none;margin-top:14px">
     <div class="seclabel">Result — MSTR return in BTC terms over <span id="rHorizon"></span> yr</div>
     <div class="stats" id="statsGrid"></div>
-    <canvas id="hist" width="720" height="180"></canvas>
-    <div class="scalelegend" style="margin-top:6px"><span>annualized return vs holding BTC →</span><span id="medlbl"></span></div>
+    <canvas id="hist" width="720" height="210"></canvas>
+    <div class="charthelp">Distribution of MSTR's <b>annual return measured in Bitcoin</b>, across all simulated paths. The white line is holding your own coins (0%); the red line is your hurdle. Bars to the right of the red line <b style="color:#5fd39b">clear the hurdle</b>; left of the white line they <b style="color:#c47a55">lose to simply holding BTC</b>.</div>
+    <div class="charthelp" id="medlbl" style="margin-top:3px"></div>
   </section>
 
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
@@ -256,9 +260,10 @@ function runModel(P){
   const underEver=new Uint8Array(n);
   const forcedSale=new Uint8Array(n);
   const strcUnavail=new Uint8Array(n);
-  const strcDev=new Float64Array(n).fill(P.strcPriceNow/P.strcPar-1);   // STRC price deviation from par (today's excursion)
+  const cStrc=new Float64Array(n).fill(P.strcCouponNow);                  // STRC coupon (state): ratchets in small steps
   const convActive=CONVERTS.map(()=>new Uint8Array(n).fill(1));  // per-path: tranche still outstanding
   const btcSold=new Float64Array(n);
+  const divForcedSale=new Uint8Array(n), divForcedSaleEver=new Uint8Array(n), btcSoldDiv=new Float64Array(n);  // last-resort dividend BTC sale
   const btcFromStrc=new Float64Array(n);                                   // BTC bought via STRC ATM
   const strcTight=new Float64Array(n), strcWide=new Float64Array(n), strcOpen=new Float64Array(n);
   const strcBurn=4;                                                        // let the initial sub-par excursion revert
@@ -304,9 +309,9 @@ function runModel(P){
       else if(P.rateModel==='jumpdiff'){ g=r10[i]+P.ust10Revert*(P.ust10Long-r10[i])*dt+P.ust10Vol*sq*zr+rateJump; }
       else { g=r10[i]+P.ust10Revert*(P.ust10Long-r10[i])*dt+P.ust10Vol*sq*zr; }
       r10[i]=g<P.ust10Floor?P.ust10Floor:g;
-      // SOFT repression: asymmetric restoring force leaning against rates above the critical value (no explicit peg)
+      // Constrained policy-rate reaction function: asymmetric one-sided pull leaning against SOFR above the threshold (fiscal-dominance cap, no explicit peg)
       if(P.repressionOn){ r10[i]-=P.repressionStrength*Math.max(r10[i]-P.repressionThreshold,0)*dt; if(r10[i]<P.ust10Floor) r10[i]=P.ust10Floor; }
-      // YCC / financial-repression ceiling (policy overlay on whichever rate model is active)
+      // Hard policy-rate cap / YCC (policy overlay on whichever rate model is active)
       if(P.yccTrigger==='now'){ if(r10[i]>P.yccCap) r10[i]=P.yccCap; }
       else if(P.yccTrigger==='year'){ if(tHeld>=P.yccStartYr && r10[i]>P.yccCap) r10[i]=P.yccCap; }
       else if(P.yccTrigger==='breach'){ if(r10[i]>=P.yccBreach) yccOn[i]=1; if(yccOn[i] && r10[i]>P.yccCap) r10[i]=P.yccCap; }
@@ -335,43 +340,57 @@ function runModel(P){
 
       R[i]*=(1+P.tbill*dt);
 
-      const amp=(S[i]+D[i])/Math.max(bv,1);   // notional preferred + all debt over BTC value (arrears excluded)
-      // STRC required (par-clearing) rate = SOFR + spread(leverage - rating credit - collateral regime)
+      const amp=(S[i]+D[i])/Math.max(bv,1);   // senior-through-STRC: notional preferred + all debt over BTC value
+      // === STRC REQUIRED YIELD = SOFR + spread (inherent baseline + three FADING stress adders) ===
+      // Widens with a short reserve runway, thin senior-through-STRC coverage (amp), and high BTC vol; tightens as
+      // the rating seasons and as converts (D) resolve. Distress add ONLY on a genuine forced sale / pause.
       const ratingCredit=P.creditMigrationOn?P.creditMaxTighten*cq[i]:0;
       const baselCredit=(P.baselCollateralOn && tHeld>=P.baselYear)?P.baselTighten:0;
-      const spread=Math.max(P.strcSpreadBase+P.strcSpreadAmp*amp-ratingCredit-baselCredit, P.strcSpreadFloor);
+      const Sstrc=Math.max(S[i]-S_fixed0,0);                          // STRC portion (issued beyond the fixed base)
+      const prefBill=S_fixed0*P.fixedPrefCpn+Sstrc*cStrc[i];          // total annual preferred dividend bill
+      const runway=R[i]/Math.max(prefBill,1);                          // years of reserve coverage of the dividend
+      const volEx=P.stochVol?Math.max(sigI-P.strcVolRef,0):0;
+      const distress=paused[i]?P.strcDistress:(divForcedSale[i]?P.strcDistressSale:0);  // pause -> full add; BTC sale -> milder add
+      let spread=P.strcSpreadFloor+P.strcRunwaySens*Math.exp(-runway/P.strcRunwayTau)
+                 +P.strcCovSens*Math.max(amp-P.strcCovFloor,0)+P.strcVolSens*volEx
+                 -ratingCredit-baselCredit+distress;
+      if(spread<P.strcSpreadMin)spread=P.strcSpreadMin;
       const reqStrc=r10[i]+spread;
-      const reqStrcCl=Math.min(Math.max(reqStrc,P.strcRateFloor),P.strcRateCeil);
-      // STRC price stability (par defense): deviation reverts hard to par; transient sub-par pushes from BTC-vol
-      // spikes (risk-off) and rate scares. Exact OU step (stable for fast par defense).
-      const volEx=P.stochVol?Math.max(sigI/sigAnchor-1,0):0;
-      const rateShock=Math.max(r10[i]-r10was,0);
-      const stressPush=P.strcStressVolSens*volEx*volEx+P.strcStressRateSens*rateShock;  // convex vol term: spikes breach band ~5%
-      const mDev=P.strcCalmDev-stressPush/P.strcParRevert;  // reverts to a persistent modest discount, pushed lower by stress
-      const sdecay=Math.exp(-P.strcParRevert*dt);
-      strcDev[i]=mDev+(strcDev[i]-mDev)*sdecay+P.strcParVol*Math.sqrt(Math.max(1-sdecay*sdecay,0))*randn();
-      if(strcDev[i]<-0.5)strcDev[i]=-0.5; else if(strcDev[i]>0.2)strcDev[i]=0.2;
-      const strcPrice=P.strcPar*(1+strcDev[i]);
-      const Sstrc=Math.max(S[i]-S_fixed0,0);                          // everything beyond the fixed base is STRC
-      const paidStrc=Math.max(reqStrcCl*(1+Math.min(strcDev[i],0)),P.strcRateFloor);  // below par -> paid lags required
-      cpn[i]=(S_fixed0*P.fixedPrefCpn+Sstrc*paidStrc)/Math.max(S[i],1); // endogenous blended preferred coupon
-      // STRC ATM issues ONLY at/above par (Strategy's policy), required rate below the hard ceiling, amp has room
-      const strcAvail=(strcPrice>=P.strcAtmPriceMin)&&(reqStrc<=P.strcRateCeil)&&(amp<P.ampHigh);
+      // === OFFERED COUPON: ratchet toward required yield to defend par, in small monthly steps, capped by
+      //     AFFORDABILITY (reserve-derived) under a willingness ceiling. Self-limiting: a higher coupon shortens runway. ===
+      const cmax=Math.min(Math.max(R[i]/(P.strcAffordFloorYr*P.prefPar),P.strcRateFloor),P.strcCmaxWilling);
+      const cTarget=Math.min(reqStrc,cmax);
+      let dc=cTarget-cStrc[i]; if(dc>P.strcCouponStep)dc=P.strcCouponStep; else if(dc<-P.strcCouponStep)dc=-P.strcCouponStep;
+      cStrc[i]=Math.min(Math.max(cStrc[i]+dc,P.strcRateFloor),P.strcCmaxWilling);
+      // === PRICE IDENTITY: P/par = coupon/required_yield, defended from ABOVE so it hugs par (below par when y>coupon) ===
+      const strcPrice=P.strcPar*Math.min(P.strcPriceCap,cStrc[i]/Math.max(reqStrc,1e-9));
+      cpn[i]=(S_fixed0*P.fixedPrefCpn+Sstrc*cStrc[i])/Math.max(S[i],1); // endogenous blended preferred coupon
+      // === ATM-OPEN FRACTION (ex-dividend SAWTOOTH-smoothed) === a price defended exactly at par is open only ~half
+      // the cycle; gated by the rate ceiling and amplification ceiling. This is the key endogenous OUTPUT.
+      const gate=((reqStrc<=P.strcRateCeil)&&(amp<P.ampHigh))?1:0;
+      let atmFrac=((strcPrice-P.strcPar)/P.strcSawAmp+0.5)*gate;
+      if(atmFrac<0)atmFrac=0; else if(atmFrac>1)atmFrac=1;
+      const strcAvail=atmFrac>0;
       if(!strcAvail) strcUnavail[i]=1;
-      if(k>=strcBurn){ if(strcPrice>=97&&strcPrice<=101)strcTight[i]++; if(strcPrice>=90&&strcPrice<=102)strcWide[i]++; if(strcAvail)strcOpen[i]++; }
+      if(k>=strcBurn){ if(strcPrice>=97)strcTight[i]++; if(strcPrice>=90)strcWide[i]++; strcOpen[i]+=atmFrac; }  // time STRC trades above $97 / above $90 (par is $100, price-capped near $100.3)
 
       const desired=P.ampTarget*bv;
       const room=Math.max(desired-(S[i]+D[i]),0);
       const cap=P.maxIssue*bv;
-      if(!paused[i] && strcAvail){ const iss=Math.min(room,cap); S[i]+=iss; held[i]+=iss/btc[i]; btcFromStrc[i]+=iss/btc[i]; }
+      if(!paused[i]){ const iss=atmFrac*Math.min(room,cap); S[i]+=iss; held[i]+=iss/btc[i]; btcFromStrc[i]+=iss/btc[i]; }
 
       const divq=cpn[i]/4*S[i];
       arr[i]*=(1+P.arrComp*dt);
-      // reserve target band scales with the preferred dividend obligation (months of coverage)
+      // reserve target band scales with the preferred dividend obligation (up to 30 months of coverage)
       const annualDiv=cpn[i]*S[i];
       const Rhigh=(P.resHigh/12)*annualDiv, Rlow=(P.resLow/12)*annualDiv, Rfloor=(P.resFloorM/12)*annualDiv;
       const healthy=(!paused[i])&&(mnav>P.engineMin);
-      if(healthy && strcAvail && R[i]<Rlow){ const refill=Rhigh-R[i]; S[i]+=refill; R[i]+=refill; }
+      // Rebuild the reserve via COMMON issuance, gated on capital ACCESS (deep coverage), NOT on the STRC ATM --
+      // else a below-par STRC could never refund the reserve that would lift it back to par (a false deadlock).
+      if(healthy && R[i]<Rlow){
+        let access=(P.ampHigh-amp)/Math.max(P.ampHigh-P.ampLow,1e-9); if(access<0)access=0; else if(access>1)access=1;
+        const refill=access*P.resRefillSpeed*(Rhigh-R[i])*dt; N[i]+=refill/Math.max(price,1e-9); R[i]+=refill;
+      }
 
       // small convert COUPON drag on still-outstanding tranches
       let cvCoupon=0; for(let j=0;j<CONVERTS.length;j++){ if(convActive[j][i]) cvCoupon+=CONVERTS[j][1]*CONVERTS[j][3]/4; }
@@ -383,6 +402,12 @@ function runModel(P){
         const fund=(mnav>1.0)?need:Math.min(need,capUsd);
         N[i]+=fund/Math.max(price,1e-9); need-=fund;
       }
+      // LAST-RESORT BTC SALE: (a) reserve exhausted + (b) common ATM too dilutive + (c) STRC ATM shut -> sell BTC (cover dividend only)
+      if(P.btcForcedSaleOn && need>0 && mnav<=P.mnavAtmFloor && !strcAvail){
+        const soldUsd=Math.min(need, P.btcForcedSaleCapFrac*held[i]*btc[i]);
+        held[i]-=soldUsd/Math.max(btc[i],1e-9); btcSoldDiv[i]+=soldUsd/Math.max(btc[i],1e-9);
+        need-=soldUsd; divForcedSale[i]=1; divForcedSaleEver[i]=1;
+      } else { divForcedSale[i]=0; }
       const pauseNow=need>0;
       paused[i]=pauseNow?1:0;
       if(pauseNow){ pausedEver[i]=1; arr[i]+=P.cumFrac*need; }
@@ -424,8 +449,9 @@ function runModel(P){
 
   const out=new Float64Array(n);
   const exitArr=new Float64Array(n);
-  let pPause=0,pUnder=0,pForced=0,soldSum=0,pStrc=0,exitSum=0;
-  let tightSum=0,wideSum=0,openSum=0; const strcArr=new Float64Array(n);
+  const sharesArr=new Float64Array(n), heldArr=new Float64Array(n);   // per-path terminal diluted share count and stack size
+  let pPause=0,pUnder=0,pForced=0,soldSum=0,pStrc=0,exitSum=0,pSaleDiv=0;
+  let tightSum=0,wideSum=0,openSum=0; const strcArr=new Float64Array(n); const soldDivArr=new Float64Array(n);
   for(let i=0;i<n;i++){
     const bv=held[i]*btc[i], senior=S[i]+arr[i]+D[i];
     const bpsT=held[i]/Math.max(N[i],1);
@@ -441,7 +467,9 @@ function runModel(P){
     const mult=exitVal/entryCost;
     out[i]= mult>0 ? Math.pow(mult,1/P.horizon)-1 : -1;
     pPause+=pausedEver[i]; pUnder+=underEver[i]; pForced+=forcedSale[i]; soldSum+=btcSold[i]; pStrc+=strcUnavail[i];
+    pSaleDiv+=divForcedSaleEver[i]; soldDivArr[i]=btcSoldDiv[i]/P.btcHeld;
     tightSum+=strcTight[i]; wideSum+=strcWide[i]; openSum+=strcOpen[i]; strcArr[i]=btcFromStrc[i]/P.btcHeld;
+    sharesArr[i]=N[i]; heldArr[i]=held[i];
   }
   const strcCounted=Math.max(steps-strcBurn,1);
   const strcSorted=Float64Array.from(strcArr).sort();
@@ -451,10 +479,17 @@ function runModel(P){
   const disc=Math.pow(1+P.rp,P.horizon);
   const fairValueMed=P.btcSpot*pctl(exitSorted,0.5)/disc;   // price where P(beat)=50%
   const fairValueMean=P.btcSpot*(exitSum/n)/disc;           // expected-value price
+  const soldDivSorted=Float64Array.from(soldDivArr).sort();
+  // Stable, tie-out exit figures: median terminal stack divided by median terminal share count.
+  const stackExitMed=pctl(Float64Array.from(heldArr).sort(),0.5);     // median BTC stack at exit
+  const sharesExitMed=pctl(Float64Array.from(sharesArr).sort(),0.5);  // median diluted shares at exit
+  const bpsExitMed=stackExitMed/Math.max(sharesExitMed,1);            // BPS that ties out: stack / shares
   return {out, pPause:pPause/n, pUnder:pUnder/n, pForced:pForced/n, pStrc:pStrc/n,
+          pSaleDiv:pSaleDiv/n, soldDivMed:pctl(soldDivSorted,0.5),
           soldFrac:soldSum/n/P.btcHeld, mnav0, amp0:(P.prefPar+D0)/(P.btcHeld*P.btcSpot),
           strcTightAvg:tightSum/n/strcCounted, strcWideAvg:wideSum/n/strcCounted,
-          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed,
+          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, bpsExitMed, stackExitMed,
+          bpsEntry:P.btcHeld/Math.max(P.shares,1),
           fairValueMed, fairValueMean, priceNow:P.mstrPrice};
 }
 
@@ -476,35 +511,72 @@ formatAll();          // apply thousands separators to the pre-filled values
 refreshFairValue();   // populate the derived readout on load
 
 function drawHist(out,rp,med){
-  const c=$('hist'), ctx=c.getContext('2d'); const W=c.width,H=c.height;
+  const c=$('hist'), ctx=c.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const cssW=c.clientWidth||720, cssH=c.clientHeight||200;
+  c.width=Math.round(cssW*dpr); c.height=Math.round(cssH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const W=cssW,H=cssH;
   ctx.clearRect(0,0,W,H);
-  const lo=-0.30, hi=0.30, bins=50, counts=new Array(bins).fill(0);
-  for(const v of out){ const x=Math.max(lo,Math.min(hi,v)); const b=Math.min(bins-1,Math.floor((x-lo)/(hi-lo)*bins)); counts[b]++; }
-  const mx=Math.max(...counts);
-  const xOf=v=>(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*W;
-  for(let b=0;b<bins;b++){ const bx=b/bins*W, bw=W/bins-1, h=counts[b]/mx*(H-22);
-    const center=lo+(b+0.5)/bins*(hi-lo);
-    ctx.fillStyle = center>rp ? '#46C7E6' : (center>0 ? '#5b6b78' : '#8a5a3c');
-    ctx.fillRect(bx,H-18-h,bw,h); }
-  // axes lines
-  const line=(v,col,lbl)=>{ const x=xOf(v); ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath();
-    ctx.moveTo(x,4); ctx.lineTo(x,H-18); ctx.stroke();
-    ctx.fillStyle=col; ctx.font='10px ui-monospace,monospace'; ctx.fillText(lbl,Math.min(x+3,W-60),12); };
-  line(0,'#D6DEE7','hold BTC');
-  line(rp,'#E2725B','hurdle');
-  line(med,'#57C98A','median');
-  ctx.fillStyle='#74838F'; ctx.font='10px ui-monospace,monospace';
-  ctx.fillText('-30%',2,H-5); ctx.fillText('0',W/2-4,H-5); ctx.fillText('+30%',W-30,H-5);
+  const padL=10,padR=10,padT=30,padB=24;
+  const x0=padL,y0=padT,plotW=W-padL-padR,plotH=H-padT-padB;
+
+  // adaptive x-range: central 96% of outcomes, always include 0 and the hurdle, padded, rounded to 5%
+  const s=Float64Array.from(out).sort(); const M=s.length;
+  const qf=p=>s[Math.max(0,Math.min(M-1,Math.round((M-1)*p)))];
+  let lo=Math.min(qf(0.05),0,rp), hi=Math.max(qf(0.95),0,rp);
+  const span=(hi-lo)||0.1; lo-=span*0.06; hi+=span*0.06;
+  lo=Math.floor(lo/0.05)*0.05; hi=Math.ceil(hi/0.05)*0.05;
+  lo=Math.max(lo,-1.0); if(hi-lo<0.10)hi=lo+0.10;          // annual return can't fall below -100%
+  const xOf=v=>x0+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*plotW;
+  const cx0=xOf(0), cxr=xOf(rp);
+
+  // outcome zones (shaded): lose to BTC (<0) · beat BTC but miss hurdle (0..rp) · clear hurdle (>=rp)
+  const band=(xa,xb,col)=>{ if(xb>xa){ctx.fillStyle=col; ctx.fillRect(xa,y0,xb-xa,plotH);} };
+  band(x0,Math.min(cx0,cxr),'rgba(176,94,60,0.10)');
+  if(rp>0) band(cx0,cxr,'rgba(120,132,143,0.10)');
+  band(Math.max(cx0,cxr),x0+plotW,'rgba(70,201,138,0.13)');
+
+  // histogram bars (central 90%; the 5% tails sit off-axis but still count in the zone shares below)
+  const bins=Math.max(22,Math.min(46,Math.round(plotW/8)));
+  const counts=new Array(bins).fill(0);
+  for(const v of out){ if(v<lo||v>hi)continue; const t=(v-lo)/(hi-lo); counts[Math.min(bins-1,Math.floor(t*bins))]++; }
+  const mx=Math.max(...counts,1), bw=plotW/bins;
+  for(let b=0;b<bins;b++){ const h=counts[b]/mx*plotH, center=lo+(b+0.5)/bins*(hi-lo);
+    ctx.fillStyle=center>=rp?'#46C7E6':(center>=0?'#7c8a96':'#b06a44');
+    ctx.fillRect(x0+b*bw,y0+plotH-h,Math.max(bw-1,1),h); }
+
+  // reference lines: holding BTC (0%) and the hurdle
+  const vline=(v,col)=>{ const x=xOf(v); ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,y0-5); ctx.lineTo(x,y0+plotH); ctx.stroke(); };
+  vline(0,'#D6DEE7'); vline(rp,'#E2725B');
+
+  // zone share labels across the top
+  let nLose=0,nMid=0,nBeat=0; for(const v of out){ if(v>=rp)nBeat++; else if(v>=0)nMid++; else nLose++; }
+  const Np=out.length, pc=x=>Math.round(x/Np*100);
+  const pL=pc(nLose), pM=pc(nMid), pB=pc(nBeat);
+  ctx.textAlign='center';
+  const ztext=(xa,xb,p,txt,col,bold)=>{ if(p===0||xb-xa<32)return; ctx.fillStyle=col; ctx.font=(bold?'600 ':'')+'12px ui-monospace,monospace'; ctx.fillText(txt,(xa+xb)/2,18); };
+  ztext(x0,Math.min(cx0,cxr),pL,pL+'% lose to BTC','#c47a55',false);
+  if(rp>0) ztext(cx0,cxr,pM,pM+'%','#9aa7b2',false);
+  ztext(Math.max(cx0,cxr),x0+plotW,pB,pB+'% clear hurdle','#5fd39b',true);
+
+  // x-axis ticks
+  ctx.fillStyle='#74838F'; ctx.font='11px ui-monospace,monospace';
+  const tick=(v,al)=>{ ctx.textAlign=al; ctx.fillText((v>0?'+':'')+Math.round(v*100)+'%',xOf(v),H-7); };
+  tick(lo,'left');
+  if(cx0>x0+36 && cx0<x0+plotW-36) tick(0,'center');
+  tick(hi,'right');
+  ctx.textAlign='left';
 }
 
 $('run').addEventListener('click',()=>{
   const P={
     btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
-    wma200:num('wma200'), dimLagFactor:1.75, gbmLagFactor:1.43,
+    wma200:num('wma200'), dimLagFactor:1.75, gbmLagFactor:1.10,
     btcHeld:num('btcHeld'), prefPar:num('prefPar'), coupon:num('coupon')/100, reserve:num('reserve'),
     horizon:num('horizon'), rp:num('rp')/100,
     expn:num('expn'), sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
-    ampTarget:num('ampTarget'), ampHigh:num('ampHigh'),
+    ampTarget:num('ampTarget'), ampHigh:num('ampHigh'), ampLow:0.30,
     piFloor:num('piFloor'), piConvex:num('piConvex'), sigRef:num('sigNow'), piVolKick:1.0,
     resHigh:num('resHigh'), resLow:num('resLow'), resFloorM:num('resFloorM'),
     sharesExCv:num('sharesExCv'),
@@ -512,6 +584,7 @@ $('run').addEventListener('click',()=>{
     nPaths:Math.max(500,Math.min(20000,Math.round(num('paths')))), kappa:num('kappa'),
     mnavFloor:0.30, engineMin:1.00, maxIssue:0.05, fcf:0, tbill:0.04,
     mnavAtmFloor:num('mnavAtmFloor'), maxCommonAtm:num('maxCommonAtm')/100,
+    btcForcedSaleOn:$('btcForcedSaleOn').checked, btcForcedSaleCapFrac:num('btcForcedSaleCapFrac')/100,
     ust10_0:num('ust10Now')/100, ust10Long:num('ust10Long')/100, ust10Corr:num('ust10Corr'),
     ust10Revert:0.40, ust10Vol:0.009, ust10Floor:0.005,
     btcModel:$('btcModel').value, rateModel:$('rateModel').value,
@@ -523,11 +596,15 @@ $('run').addEventListener('click',()=>{
     stochVol:$('stochVol').checked, vovRevert:3.0, vovVol:1.10,
     yccTrigger:$('yccTrigger').value, yccCap:num('yccCap')/100, yccStartYr:num('yccStartYr'), yccBreach:num('yccBreach')/100,
     repressionOn:$('repressionOn').checked, repressionThreshold:num('repressionThreshold')/100, repressionStrength:num('repressionStrength'),
-    strcWeight:0.68, fixedPrefCpn:0.093, strcSpreadBase:num('strcSpreadBase')/100,
-    strcSpreadAmp:num('strcSpreadAmp')/100, strcRateFloor:0.04, strcRateCeil:num('strcRateCeil')/100,
-    strcPar:100, strcPriceNow:num("strcPriceNow"), strcParRevert:12.0, strcCalmDev:-0.024, strcParVol:0.0295,
-    strcStressVolSens:0.35, strcStressRateSens:5.0, strcAtmPriceMin:100,
-    strcSpreadFloor:0.020, creditSeasonUp:0.35, creditDowngradeHit:0.30,
+    strcWeight:0.68, fixedPrefCpn:0.093,
+    strcPar:100, strcPriceNow:num("strcPriceNow"), strcCouponNow:num('strcCouponNow')/100,
+    strcRateFloor:0.04, strcRateCeil:num('strcRateCeil')/100,
+    strcSpreadFloor:num('strcSpreadFloor')/100, strcRunwaySens:num('strcRunwaySens')/100, strcRunwayTau:0.60,
+    strcCovSens:num('strcCovSens')/100, strcCovFloor:0.30, strcVolSens:num('strcVolSens')/100, strcVolRef:0.55,
+    strcDistress:0.040, strcDistressSale:0.020, strcSpreadMin:0.030,
+    strcCmaxWilling:num('strcCmaxWilling')/100, strcAffordFloorYr:0.60, strcCouponStep:0.0075,
+    strcPriceCap:1.003, strcSawAmp:num('strcSawAmp'), resRefillSpeed:1.6,
+    creditSeasonUp:0.35, creditDowngradeHit:0.30,
     creditMigrationOn:$('creditMigrationOn').checked, creditMaxTighten:num('creditMaxTighten')/100,
     baselCollateralOn:$('baselCollateralOn').checked, baselYear:num('baselYear'), baselTighten:num('baselTighten')/100,
   };
@@ -552,29 +629,33 @@ $('run').addEventListener('click',()=>{
     const upside=(fvMed/pnow-1)*100, fvCol=fvMed>=pnow?'var(--good)':'var(--btc)';
     vs.innerHTML=`<span style="font-size:15px">Model <b>MSTR fair value ≈ <span style="color:${fvCol}">$${fvMed.toFixed(0)}</span></b> `+
       `vs. $${pnow.toFixed(0)} today → <b style="color:${fvCol}">${upside>=0?'+':''}${upside.toFixed(0)}% ${upside>=0?'undervalued':'overvalued'}</b> `+
-      `<span style="color:var(--muted)">(price where MSTR is a coin-flip vs self-custody BTC over ${P.horizon}y; expected-value FV $${fvMean.toFixed(0)})</span>.</span><br><br>`+
+      `<span style="color:var(--muted)">(this is the <b>coin-flip price</b>: at it, MSTR beats self-custody BTC on exactly half of paths over ${P.horizon}y.)</span></span><br><br>`+
       `Median MSTR return is <b>${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr</b> in BTC terms — `+
       `${medExcess>=0?'<b style="color:var(--good)">+'+(medExcess*100).toFixed(1)+'%/yr above</b>':'<b style="color:var(--btc)">'+(medExcess*100).toFixed(1)+'%/yr below</b>'} your hurdle. `+
       `Dividend pauses on ${(res.pPause*100).toFixed(0)}% of paths (recoverable); net backing turns negative on ${(res.pUnder*100).toFixed(1)}% (deep stress, not a wipeout). `+
-      `<b style="color:var(--btc)">Forced BTC sale at a convert put date on ${(res.pForced*100).toFixed(0)}% of paths</b> (avg ${(res.soldFrac*100).toFixed(2)}% of the stack). `+
-      `STRC ATM unavailable at some point on ${(res.pStrc*100).toFixed(0)}% of paths (leverage spikes past the par-clearing ceiling) — obligations then route to the below-NAV common ATM.`;
+      `<b style="color:var(--btc)">Last-resort BTC sale to fund the dividend on ${(res.pSaleDiv*100).toFixed(0)}% of paths</b> (reserve exhausted, common ATM too dilutive, STRC ATM shut; median ${(res.soldDivMed*100).toFixed(0)}% of the stack liquidated). `+
+      `<b style="color:var(--btc)">Forced BTC sale at a convert put date on ${(res.pForced*100).toFixed(0)}% of paths</b> (avg ${(res.soldFrac*100).toFixed(2)}% of the stack). `;
 
     // stats
     const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
+    const fmtSats=x=>Math.round(x*1e8).toLocaleString()+' sats';
+    const fmtStack=x=> x>=1e6 ? (x/1e6).toFixed(2)+'M BTC' : Math.round(x/1e3).toLocaleString()+'K BTC';
     const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
     $('statsGrid').innerHTML=
       cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
-      cell('Rational mNAV (fair)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Entry mNAV (today)',res.mnav0.toFixed(2)+'×')+
       cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
+      cell('Entry mNAV (today)',res.mnav0.toFixed(2)+'×')+
+      cell('Rational mNAV (fair)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
       cell('P(beat BTC) after hurdle',(beatAfter*100).toFixed(0)+'%',beatAfter>=0.5?'pos':'neg')+
       cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
-      cell('5th–95th pct (BTC terms)',(p5*100).toFixed(0)+'% … +'+(p95*100).toFixed(0)+'%')+
+      cell('BPS at Entry',fmtSats(res.bpsEntry))+
+      cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
+      cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
+      cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
       cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%')+
-      cell('BTC via STRC ATM (median)',(res.btcViaStrcMed*100).toFixed(0)+'% of stack')+
-      cell('STRC within $97–101 / $90–102',(res.strcTightAvg*100).toFixed(0)+'% / '+(res.strcWideAvg*100).toFixed(0)+'%');
+      cell('STRC above $97 / $90',(res.strcTightAvg*100).toFixed(0)+'% / '+(res.strcWideAvg*100).toFixed(0)+'%');
     $('rHorizon').textContent=P.horizon;
-    $('medlbl').textContent=`median ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr`;
+    $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
     $('results').style.display='block';
     drawHist(out,rp,med);
     $('run').textContent='Run assessment';
