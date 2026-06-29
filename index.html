@@ -75,24 +75,43 @@
         <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:11.5px;color:var(--muted)"><input type="checkbox" id="stochVol" checked style="width:auto"> stochastic volatility (auto-calibrated regimes)</label></div>
     </div>
     <details>
-      <summary>Assumptions ▾</summary>
-      <div class="seclabel" style="margin-top:12px">Market snapshot</div>
+      <summary>Market snapshot ▾</summary>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59400"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59800"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62850"></div>
         <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="85"></div>
         <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="74"></div>
-        <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="386052000"></div>
+        <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="398721017"></div>
       </div>
-      <div class="seclabel" style="margin-top:12px">Strategy balance sheet</div>
+    </details>
+    <details>
+      <summary>Strategy balance sheet ▾</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
-        <div class="f"><label>Preferred par @ liq-pref (USD)</label><input id="prefPar" value="15500000000"></div>
-        <div class="f"><label>Blended preferred coupon (%/yr)</label><input id="coupon" value="11"></div>
-        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="1400000000"></div>
+        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="2550000000"></div>
+        <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
+      </div>
+      <div class="seclabel" style="margin-top:12px">Debt — convertible notes (notional, $M)</div>
+      <div class="grid">
+        <div class="f"><label>Convert 2028</label><input id="cv2028" value="1010"></div>
+        <div class="f"><label>Convert 2030 B</label><input id="cv2030b" value="2000"></div>
+        <div class="f"><label>Convert 2029</label><input id="cv2029" value="1500"></div>
+        <div class="f"><label>Convert 2030 A</label><input id="cv2030a" value="800"></div>
+        <div class="f"><label>Convert 2031</label><input id="cv2031" value="604"></div>
+        <div class="f"><label>Convert 2032</label><input id="cv2032" value="800"></div>
+      </div>
+      <div class="seclabel" style="margin-top:12px">Preferred stock (notional, $M)</div>
+      <div class="grid">
+        <div class="f"><label>STRF</label><input id="preStrf" value="1284"></div>
+        <div class="f"><label>STRC</label><input id="preStrc" value="10489"></div>
+        <div class="f"><label>STRE</label><input id="preStre" value="883"></div>
+        <div class="f"><label>STRK</label><input id="preStrk" value="1402"></div>
+        <div class="f"><label>STRD</label><input id="preStrd" value="1402"></div>
       </div>
       <div class="derived" id="derived"></div>
-      <div class="seclabel" style="margin-top:12px">Model parameters</div>
+    </details>
+    <details>
+      <summary>Model parameters ▾</summary>
       <div class="grid" style="margin-top:10px">
         <div class="f"><label>Power-law exponent n</label><input id="expn" value="5.77"></div>
         <div class="f"><label>BTC relative vol now σ (log)</label><input id="sigNow" value="0.50"></div>
@@ -135,7 +154,6 @@
         <div class="f"><label>Cap start year (if "after year N")</label><input id="yccStartYr" value="3"></div>
         <div class="f"><label>Cap breach level — SOFR trigger (%)</label><input id="yccBreach" value="6.0"></div>
         <div class="f"><label>SOFR–BTC shock correlation</label><input id="ust10Corr" value="0"></div>
-        <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="11.5"></div>
         <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="7.0"></div>
         <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="4.0"></div>
         <div class="f"><label>STRC spread × coverage sensitivity (%)</label><input id="strcCovSens" value="16"></div>
@@ -148,7 +166,7 @@
         <div class="f"><label>BTC-as-collateral regime (Basel)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="baselCollateralOn" style="width:auto"> enable</label></div>
         <div class="f"><label>Basel: effective from year</label><input id="baselYear" value="5"></div>
         <div class="f"><label>Basel: permanent spread tightening (%)</label><input id="baselTighten" value="1.5"></div>
-        <div class="f"><label>Shares ex-converts (basic+options+RSU)</label><input id="sharesExCv" value="360440000"></div>
+        <div class="f"><label>Shares ex-converts (basic+options+RSU)</label><input id="sharesExCv" value="373109017"></div>
         <div class="f"><label>Cumulative div fraction</label><input id="cumFrac" value="0.85"></div>
         <div class="f"><label>Arrears compound (%/yr)</label><input id="arrComp" value="10"></div>
         <div class="f"><label>Simulated paths</label><input id="paths" value="5000"></div>
@@ -184,7 +202,7 @@
 const $ = id => document.getElementById(id);
 const num = id => parseFloat(String($(id).value).replace(/,/g,''));
 // thousands-separator formatting for the large currency/count fields
-const COMMA_FIELDS = ['btcSpot','wma200','mstrPrice','strcPriceNow','shares','btcHeld','prefPar','reserve','paths'];
+const COMMA_FIELDS = ['btcSpot','wma200','mstrPrice','strcPriceNow','shares','btcHeld','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
 const fmt = v => Number.isFinite(v) ? v.toLocaleString('en-US',{maximumFractionDigits:2}) : '';
 function fmtField(id){ const v=num(id); if(Number.isFinite(v)) $(id).value=fmt(v); }
 function formatAll(){ COMMA_FIELDS.forEach(fmtField); }
@@ -210,10 +228,23 @@ function premium(netRatio,sigma,flywheelOn,tHeld,P){
   return Math.max(netRatio + pi + disloc, P.mnavFloor);
 }
 
-// convertible notes resolved at each PUT date: [put yrs from Jun 19 2026, principal USD, conversion strike USD]
-// converts: [put yrs, principal USD, strike, coupon, call yrs] from Jun 19 2026
-const CONVERTS = [[1.24,1.010e9,183.19,0.00625,1.50],[1.70,2.000e9,433.43,0,0.71],[1.95,1.500e9,672.40,0,0.46],[2.24,0.800e9,149.77,0.00625,0.76],[2.24,0.604e9,232.72,0.00875,1.76],[2.99,0.800e9,204.33,0.0225,3.00]];
-const CONVERT_TOTAL = CONVERTS.reduce((a,c)=>a+c[1],0);
+// Convert tranches: fixed [put yrs from ~Jun 2026, strike, coupon, call yrs]; the notional ($M) is editable per tranche.
+const CONVERT_META = [
+  {id:'cv2028', put:1.24, strike:183.19, cpn:0.00625, call:1.50},
+  {id:'cv2030b',put:1.70, strike:433.43, cpn:0,       call:0.71},
+  {id:'cv2029', put:1.95, strike:672.40, cpn:0,       call:0.46},
+  {id:'cv2030a',put:2.24, strike:149.77, cpn:0.00625, call:0.76},
+  {id:'cv2031', put:2.24, strike:232.72, cpn:0.00875, call:1.76},
+  {id:'cv2032', put:2.99, strike:204.33, cpn:0.0225,  call:3.00},
+];
+const PREF_META = ['preStrf','preStrc','preStre','preStrk','preStrd'];   // STRC (preStrc) is the variable-coupon tranche
+const convertsNow     = ()=>CONVERT_META.map(m=>[m.put, num(m.id)*1e6, m.strike, m.cpn, m.call]);
+const convertTotalNow = ()=>CONVERT_META.reduce((a,m)=>a+num(m.id)*1e6,0);
+const prefParNow      = ()=>PREF_META.reduce((a,id)=>a+num(id)*1e6,0);
+const strcParNow      = ()=>num('preStrc')*1e6;
+// Fixed-coupon tranches (STRC excluded — its coupon is variable). Coupons are at par; blended rate derives from the mix.
+const FIXED_PREF = [{id:'preStrf',cpn:0.10},{id:'preStrk',cpn:0.08},{id:'preStrd',cpn:0.10},{id:'preStre',cpn:0.10}];
+const fixedPrefCpnNow = ()=>{ let par=0,wc=0; for(const p of FIXED_PREF){ const v=num(p.id)*1e6; par+=v; wc+=v*p.cpn; } return par>0?wc/par:0; };
 const CALL_ITM_MULT = 1.30;
 
 // SINGLE SOURCE OF TRUTH for MSTR market cap / mNAV. Market cap is ALWAYS
@@ -230,7 +261,7 @@ function runModel(P){
                 : (P.btcModel==='diminishing') ? P.dimLagFactor*P.wma200
                 : P.gbmLagFactor*P.wma200;
   const N0 = P.shares;   // ASSUMED-DILUTED: convertibles are pre-counted as their conversion shares from t=0
-  const D0 = CONVERT_TOTAL;                                 // convert principal carried as senior debt initially
+  const D0 = P.convertTotal;                                // convert principal carried as senior debt initially
   const mnav0=mnavOf(P.mstrPrice,P.shares,P.btcHeld,P.btcSpot); // observed entry mNAV (price x diluted shares / BTC value)
   const entryCost=P.mstrPrice/P.btcSpot;                    // BTC paid per share (mode-independent)
   const r0=(P.btcModel==='gbm')?0:Math.log(P.btcSpot/fairNow);
@@ -248,7 +279,7 @@ function runModel(P){
   const N=new Float64Array(n).fill(N0);
   const D=new Float64Array(n).fill(D0);     // convert debt (senior to preferred)
   const R=new Float64Array(n).fill(P.reserve);
-  const cpn=new Float64Array(n).fill(P.coupon);
+  const cpn=new Float64Array(n).fill((S_fixed0*P.fixedPrefCpn+(P.prefPar-S_fixed0)*P.strcCouponNow)/Math.max(P.prefPar,1)); // blended = fixed tranches + STRC, derived
   const r10=new Float64Array(n).fill(P.ust10_0);   // policy / short rate (SOFR proxy)
   const arr=new Float64Array(n);           // arrears
   const rr=new Float64Array(n).fill(r0);    // residual
@@ -261,7 +292,7 @@ function runModel(P){
   const forcedSale=new Uint8Array(n);
   const strcUnavail=new Uint8Array(n);
   const cStrc=new Float64Array(n).fill(P.strcCouponNow);                  // STRC coupon (state): ratchets in small steps
-  const convActive=CONVERTS.map(()=>new Uint8Array(n).fill(1));  // per-path: tranche still outstanding
+  const convActive=P.converts.map(()=>new Uint8Array(n).fill(1));  // per-path: tranche still outstanding
   const btcSold=new Float64Array(n);
   const divForcedSale=new Uint8Array(n), divForcedSaleEver=new Uint8Array(n), btcSoldDiv=new Float64Array(n);  // last-resort dividend BTC sale
   const btcFromStrc=new Float64Array(n);                                   // BTC bought via STRC ATM
@@ -393,7 +424,7 @@ function runModel(P){
       }
 
       // small convert COUPON drag on still-outstanding tranches
-      let cvCoupon=0; for(let j=0;j<CONVERTS.length;j++){ if(convActive[j][i]) cvCoupon+=CONVERTS[j][1]*CONVERTS[j][3]/4; }
+      let cvCoupon=0; for(let j=0;j<P.converts.length;j++){ if(convActive[j][i]) cvCoupon+=P.converts[j][1]*P.converts[j][3]/4; }
       const capUsd=P.maxCommonAtm*bv;                         // below-NAV common issuance the market can place this qtr
       let need=Math.max(divq+cvCoupon-P.fcf,0);
       const draw=Math.min(need,Math.max(R[i]-Rfloor,0)); R[i]-=draw; need-=draw;
@@ -423,9 +454,9 @@ function runModel(P){
       }
 
       // convertibles: early ITM conversion at CALL date; resolve remainder at PUT date
-      for(let j=0;j<CONVERTS.length;j++){
+      for(let j=0;j<P.converts.length;j++){
         if(!convActive[j][i]) continue;
-        const putd=CONVERTS[j][0], Pr=CONVERTS[j][1], strike=CONVERTS[j][2], calld=CONVERTS[j][4];
+        const putd=P.converts[j][0], Pr=P.converts[j][1], strike=P.converts[j][2], calld=P.converts[j][4];
         if(tHeld>=calld && price>=CALL_ITM_MULT*strike){      // deeply ITM after call -> convert; shares already counted
           D[i]-=Pr; convActive[j][i]=0; continue;
         }
@@ -498,14 +529,14 @@ function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=
 
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
-  const amp0=(num('prefPar')+CONVERT_TOTAL)/(num('btcHeld')*num('btcSpot'));
+  const amp0=(prefParNow()+convertTotalNow())/(num('btcHeld')*num('btcSpot'));
   const dev=(num('btcSpot')/powerLawFairValue(num('expn')||5.77)-1)*100;
   $('derived').innerHTML=
     `<span class="d">entry mNAV <b>${mnav0.toFixed(2)}×</b></span>`+
     `<span class="d">amplification <b>${(amp0*100).toFixed(1)}%</b></span>`+
     `<span class="d">BTC vs line <b>${dev>=0?'+':''}${dev.toFixed(0)}%</b></span>`;
 }
-['btcSpot','mstrPrice','shares','btcHeld','prefPar','expn'].forEach(id=>$(id).addEventListener('input',updateDerived));
+['btcSpot','mstrPrice','shares','btcHeld','expn','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
 COMMA_FIELDS.forEach(id=>$(id).addEventListener('blur',()=>fmtField(id)));
 formatAll();          // apply thousands separators to the pre-filled values
 refreshFairValue();   // populate the derived readout on load
@@ -573,7 +604,7 @@ $('run').addEventListener('click',()=>{
   const P={
     btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
     wma200:num('wma200'), dimLagFactor:1.75, gbmLagFactor:1.10,
-    btcHeld:num('btcHeld'), prefPar:num('prefPar'), coupon:num('coupon')/100, reserve:num('reserve'),
+    btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
     horizon:num('horizon'), rp:num('rp')/100,
     expn:num('expn'), sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
     ampTarget:num('ampTarget'), ampHigh:num('ampHigh'), ampLow:0.30,
@@ -596,7 +627,7 @@ $('run').addEventListener('click',()=>{
     stochVol:$('stochVol').checked, vovRevert:3.0, vovVol:1.10,
     yccTrigger:$('yccTrigger').value, yccCap:num('yccCap')/100, yccStartYr:num('yccStartYr'), yccBreach:num('yccBreach')/100,
     repressionOn:$('repressionOn').checked, repressionThreshold:num('repressionThreshold')/100, repressionStrength:num('repressionStrength'),
-    strcWeight:0.68, fixedPrefCpn:0.093,
+    strcWeight:strcParNow()/Math.max(prefParNow(),1), fixedPrefCpn:fixedPrefCpnNow(),
     strcPar:100, strcPriceNow:num("strcPriceNow"), strcCouponNow:num('strcCouponNow')/100,
     strcRateFloor:0.04, strcRateCeil:num('strcRateCeil')/100,
     strcSpreadFloor:num('strcSpreadFloor')/100, strcRunwaySens:num('strcRunwaySens')/100, strcRunwayTau:0.60,
