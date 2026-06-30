@@ -61,26 +61,27 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
-  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Holding your own coins is the benchmark: one BTC stays one BTC, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR beats that, after a counterparty-risk hurdle — an annual rate that compounds over your horizon and that the equity must clear in Bitcoin terms. Set the hurdle negative to credit the wrapper's convenience — no key management, no ETF fee — over self-custody; that raises the fair mNAV. The tool runs a Monte Carlo over the Bitcoin price (three models to choose from) and the policy rate, then propagates Strategy's full capital structure to a fair premium: the mNAV at which the equity beats self-custody half the time. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, and which Bitcoin model you believe.</b> mNAV here is MSTR's equity market cap (share price × diluted shares) over the dollar value of its Bitcoin; the Assumptions fields are pre-filled with a snapshot you can edit to match current values.</p>
+  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Holding your own coins is the benchmark: one BTC stays one BTC, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR beats that, after a counterparty-risk hurdle — an annual rate that compounds over your horizon and that the equity must clear in Bitcoin terms. Set the hurdle negative to credit the wrapper's convenience — no key management, no ETF fee — over self-custody; that raises the fair mNAV. The tool runs a Monte Carlo over the Bitcoin price (three models to choose from) and the policy rate, then propagates Strategy's full capital structure to a fair premium: the mNAV at which the equity beats self-custody half the time. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, your personal Bitcoin price model, and the overall market's Bitcoin price model for the holding period.</b> The market's Bitcoin outlook sets the structural premium MSTR trades at — the level the price reverts to and follows over the hold. Your own model drives your Bitcoin-denominated return through the BPS (Bitcoin-per-share) accretion it produces. mNAV here is MSTR's equity market cap (share price × diluted shares) over the dollar value of its Bitcoin; the Assumptions fields are pre-filled with a snapshot you can edit to match current values.</p>
   <p style="margin:-8px 0 18px;font-size:13.5px;"><a href="whitepaper.pdf" target="_blank" rel="noopener" style="color:var(--mstr);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;">📄&nbsp; Read the full white paper (PDF) &rarr;</a></p>
 
   <section>
     <div class="seclabel">Your decision frame</div>
     <div class="grid">
       <div class="f"><label>Holding horizon (years)</label><input id="horizon" value="10"></div>
-      <div class="f"><label>Counterparty risk hurdle vs self-custody (%/yr, compounded over horizon; may be negative)</label><input id="rp" value="4.5"></div>
+      <div class="f"><label>Counterparty risk hurdle vs self-custody (%/yr, compounded over horizon; may be negative)</label><input id="rp" value="3.5"></div>
     </div>
     <div class="grid">
-      <div class="f"><label>Bitcoin price model</label><select id="btcModel"><option value="powerlaw">Power Law (Santostasi) — bullish</option><option value="diminishing">Diminishing Returns — conservative</option><option value="gbm">GBM (random walk) — neutral/skeptic</option></select>
+      <div class="f"><label>Your Bitcoin price model</label><select id="btcModel"><option value="powerlaw">Power Law (Santostasi) — bullish</option><option value="diminishing">Diminishing Returns — conservative</option><option value="gbm">GBM (random walk) — neutral/skeptic</option></select></div>
+      <div class="f"><label>The market's Bitcoin outlook</label><select id="btcModelMkt"><option value="powerlaw">Power Law (Santostasi) — bullish</option><option value="diminishing" selected>Diminishing Returns — conservative</option><option value="gbm">GBM (random walk) — neutral/skeptic</option></select>
         <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:11.5px;color:var(--muted)"><input type="checkbox" id="stochVol" checked style="width:auto"> stochastic volatility (auto-calibrated regimes)</label></div>
     </div>
     <details>
       <summary>Market snapshot ▾</summary>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="59800"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="60000"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="62850"></div>
-        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="85"></div>
-        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="74"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="92.68"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="83.67"></div>
         <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="398721017"></div>
       </div>
     </details>
@@ -88,6 +89,7 @@
       <summary>Strategy balance sheet ▾</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
+        <div class="f"><label>Accessible BTC supply (lost coins excluded)</label><input id="sAcc" value="17300000"></div>
         <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="2550000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
@@ -121,6 +123,10 @@
         <div class="f"><label>Amplification ceiling</label><input id="ampHigh" value="0.60"></div>
         <div class="f"><label>Durable premium floor π_floor</label><input id="piFloor" value="0.15"></div>
         <div class="f"><label>Convexity premium π_convex</label><input id="piConvex" value="0.30"></div>
+        <div class="f"><label>Price impact: concentration coef k_perm</label><input id="kPerm" value="0.25"></div>
+        <div class="f"><label>Price impact: buy-size coef k_temp</label><input id="kTemp" value="2.0"></div>
+        <div class="f"><label>Premium concentration-decay exponent p_conc</label><input id="pConc" value="1.0"></div>
+        <div class="f"><label>STRC carry margin (%/yr)</label><input id="carryMargin" value="0"></div>
         <div class="f"><label>Reserve target — high (months of div)</label><input id="resHigh" value="24"></div>
         <div class="f"><label>Reserve refill trigger (months)</label><input id="resLow" value="12"></div>
         <div class="f"><label>Reserve op. floor (months)</label><input id="resFloorM" value="3"></div>
@@ -154,7 +160,7 @@
         <div class="f"><label>Cap start year (if "after year N")</label><input id="yccStartYr" value="3"></div>
         <div class="f"><label>Cap breach level — SOFR trigger (%)</label><input id="yccBreach" value="6.0"></div>
         <div class="f"><label>SOFR–BTC shock correlation</label><input id="ust10Corr" value="0"></div>
-        <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="7.0"></div>
+        <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="5.5"></div>
         <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="4.0"></div>
         <div class="f"><label>STRC spread × coverage sensitivity (%)</label><input id="strcCovSens" value="16"></div>
         <div class="f"><label>STRC spread × volatility sensitivity (%)</label><input id="strcVolSens" value="9"></div>
@@ -194,7 +200,7 @@
   </section>
 
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
-    <b>Disclaimer.</b> This tool is provided for educational and informational purposes only. It does not constitute financial, investment, tax, or legal advice, nor a recommendation or solicitation to buy or sell any security or asset, including MSTR shares, Strategy's preferred securities, or Bitcoin. Every figure it produces is the conditional output of user-supplied assumptions and stylized parameters, is not a forecast, and may differ materially from realized outcomes. Markets involve risk of loss. Conduct your own due diligence and consult a qualified, licensed professional before making any investment decision. This decision tool is itself a work in progress and is likely to change as new learnings arise, the modeling improves, and strategies evolve.
+    <b>Disclaimer.</b> This tool is provided for educational and informational purposes only. It does not constitute financial, investment, tax, or legal advice, nor a recommendation or solicitation to buy or sell any security or asset, including MSTR shares, Strategy's preferred securities, or Bitcoin. Every figure it produces is the conditional output of user-supplied assumptions and stylized parameters, is not a forecast, and may differ materially from realized outcomes. Results for holding periods beyond roughly thirty years deserve particular caution and should be read as directional rather than precise: across such spans the Bitcoin monetary and security model, the interest-rate regime, the regulatory environment, and Strategy's own capital structure and strategy all carry uncertainties the model cannot fully capture, and several of its dynamics grow increasingly sensitive to the assumptions behind them. Markets involve risk of loss. Conduct your own due diligence and consult a qualified, licensed professional before making any investment decision. This decision tool is itself a work in progress and is likely to change as new learnings arise, the modeling improves, and strategies evolve.
   </p>
 </div>
 
@@ -202,7 +208,7 @@
 const $ = id => document.getElementById(id);
 const num = id => parseFloat(String($(id).value).replace(/,/g,''));
 // thousands-separator formatting for the large currency/count fields
-const COMMA_FIELDS = ['btcSpot','wma200','mstrPrice','strcPriceNow','shares','btcHeld','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
+const COMMA_FIELDS = ['btcSpot','wma200','mstrPrice','strcPriceNow','shares','btcHeld','sAcc','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
 const fmt = v => Number.isFinite(v) ? v.toLocaleString('en-US',{maximumFractionDigits:2}) : '';
 function fmtField(id){ const v=num(id); if(Number.isFinite(v)) $(id).value=fmt(v); }
 function formatAll(){ COMMA_FIELDS.forEach(fmtField); }
@@ -222,10 +228,22 @@ function randn(){ if(spare!==null){const s=spare;spare=null;return s;}
   let u=0,v=0,s=0; do{u=Math.random()*2-1;v=Math.random()*2-1;s=u*u+v*v;}while(s>=1||s===0);
   const m=Math.sqrt(-2*Math.log(s)/s); spare=v*m; return u*m; }
 
-function premium(netRatio,sigma,flywheelOn,tHeld,P){
-  const pi = P.piFloor + (flywheelOn ? P.piConvex*(sigma/P.sigRef) : 0);
+function premium(netRatio,sigma,flywheelOn,tHeld,P,gConc){
+  if(gConc===undefined)gConc=1;
+  // concentration brake: the optionality premium is the capitalized value of FUTURE accretion, so it decays toward 0
+  // as Strategy's share of accessible supply rises (gConc -> 0), leaving only the hard backing ratio.
+  const pi = gConc*(P.piFloor + (flywheelOn ? P.piConvex*(sigma/P.sigRef) : 0));
   const disloc = P.entryGap*Math.exp(-P.kappa*tHeld);   // gap between observed entry mNAV and justified, decays
   return Math.max(netRatio + pi + disloc, P.mnavFloor);
+}
+
+// Execution price for Strategy's own marginal BTC purchases: spot plus a slippage markup that rises with the firm's
+// share of accessible supply (permanent scarcity) and with the size of the buy against the thinning free float
+// (temporary impact). Binds on QUANTITY only -- the global BTC price is untouched -- so the stack asymptotes.
+function execPx(usd,h,b,P){
+  const theta=Math.min(h/P.sAcc,0.999999), flt=Math.max(P.sAcc-h,1);
+  const lam=P.kPerm*theta/(1-theta) + P.kTemp*(usd/Math.max(b,1e-9))/flt;
+  return b*(1+lam);
 }
 
 // Convert tranches: fixed [put yrs from ~Jun 2026, strike, coupon, call yrs]; the notional ($M) is editable per tranche.
@@ -270,7 +288,14 @@ function runModel(P){
   const bv0=P.btcHeld*P.btcSpot;
   const nr0=(bv0-(P.prefPar+D0)+P.reserve)/bv0;
   const pi0=P.piFloor+P.piConvex*(P.sigNow/P.sigRef);
-  P.entryGap = mnav0-(nr0+pi0);
+  // Justified premium = STRUCTURAL floor (backing + durable premium), ~nr0+pi0 at entry. Observed entry mNAV reverts
+  // toward it; fair pass anchors there directly (price-independent).
+  P.entryGap = P.fairPass ? 0 : (mnav0-(nr0+pi0));
+  P.justifiedEntry = nr0+pi0;
+  const theta0 = P.btcHeld/P.sAcc;   // Strategy's share of accessible supply today (concentration-brake baseline)
+  // Market-pass recorders: median STRUCTURAL-premium path under the market's BTC outlook, fed into the user passes.
+  const recordPath=!!P.recordPath, pcol=recordPath?new Float64Array(n):null, tcol=recordPath?new Float64Array(n):null;
+  const premiumPath=recordPath?new Float64Array(steps):null; let premiumPathT=null;
 
   const btc=new Float64Array(n).fill(P.btcSpot);
   const held=new Float64Array(n).fill(P.btcHeld);
@@ -311,6 +336,8 @@ function runModel(P){
     // diminishing-returns trend grows from the model's FAIR VALUE (lag x 200WMA), CAGR decaying to terminal
     const dimTrend=fairNow*Math.exp(P.dimCagrTerm*tHeld+(P.dimCagr0-P.dimCagrTerm)/P.dimDecay*(1-Math.exp(-P.dimDecay*tHeld)));
     const ddev=(P.btcModel==='gbm')?devGbm0*Math.exp(-P.revert*(tHeld-dt))*(Math.exp(-P.revert*dt)-1):0;   // this step's deterministic catch-up toward GBM fair value
+    const mnavStep = P.mnavMarketPath ? (P.mnavMarketPath[k] + P.entryGap*Math.exp(-P.kappa*tHeld)) : 0;
+    const gBtcStep = (P.btcModel==='powerlaw') ? P.expn/(T0+tHeld) : (P.btcModel==='diminishing') ? (P.dimCagrTerm+(P.dimCagr0-P.dimCagrTerm)*Math.exp(-P.dimDecay*tHeld)) : P.gbmDrift;   // local BTC forward growth, for STRC carry test
     for(let i=0;i<n;i++){
       const zb=randn(), zi=randn();
       const zr=P.ust10Corr*zb+Math.sqrt(1-P.ust10Corr*P.ust10Corr)*zi;
@@ -351,11 +378,18 @@ function runModel(P){
       const senior=S[i]+arr[i]+D[i];
       const netRatio=(bv-senior+R[i])/Math.max(bv,1);
       if(netRatio<0) underEver[i]=1;
-      let mnav=premium(netRatio,sigI,!paused[i],tHeld,P);
-      // CONVEX UPSIDE: a vol spike above the anchor balloons the premium, gated on strength (high net backing)
-      if(P.stochVol && P.piVolKick>0 && !paused[i]){
-        const ex=Math.max(sigI/sigAnchor-1,0);
-        mnav+=P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
+      let mnav;
+      if(P.mnavMarketPath){ mnav=mnavStep; }   // user pass: follows the market's structural-premium path + reverting dislocation
+      else {
+        const thetaC=Math.min(held[i]/P.sAcc,0.999999), gConc=Math.pow(Math.max((1-thetaC)/(1-theta0),0),P.pConc);
+        mnav=premium(netRatio,sigI,!paused[i],tHeld,P,gConc);
+        // CONVEX UPSIDE: a vol spike above the anchor balloons the premium, gated on strength; faded by gConc too,
+        // since the upside flywheel likewise capitalizes future accretion.
+        if(P.stochVol && P.piVolKick>0 && !paused[i]){
+          const ex=Math.max(sigI/sigAnchor-1,0);
+          mnav+=gConc*P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
+        }
+        if(recordPath) pcol[i]=mnav;
       }
       const price=mnav*bv/Math.max(N[i],1);
 
@@ -364,7 +398,7 @@ function runModel(P){
         const frac=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap);  // drive a truck through a big premium
         const atmUsd=frac*bv;
         N[i]+=atmUsd/Math.max(price,1e-9);
-        held[i]+=atmUsd/btc[i];
+        held[i]+=atmUsd/execPx(atmUsd,held[i],btc[i],P);   // #1 float-depletion slippage on Strategy's own buys
         bv=held[i]*btc[i];
       }
       btcRef[i]+=P.strengthAlpha*(btc[i]-btcRef[i]);
@@ -408,7 +442,9 @@ function runModel(P){
       const desired=P.ampTarget*bv;
       const room=Math.max(desired-(S[i]+D[i]),0);
       const cap=P.maxIssue*bv;
-      if(!paused[i]){ const iss=atmFrac*Math.min(room,cap); S[i]+=iss; held[i]+=iss/btc[i]; btcFromStrc[i]+=iss/btc[i]; }
+      // #3 carry closure: proactive STRC-funded accumulation only while BTC forward growth clears the STRC coupon.
+      const carryOpen = gBtcStep > cStrc[i] + P.carryMargin;
+      if(!paused[i] && carryOpen){ const iss=atmFrac*Math.min(room,cap); S[i]+=iss; const coins=iss/execPx(iss,held[i],btc[i],P); held[i]+=coins; btcFromStrc[i]+=coins; }
 
       const divq=cpn[i]/4*S[i];
       arr[i]*=(1+P.arrComp*dt);
@@ -476,6 +512,7 @@ function runModel(P){
         }
       }
     }
+    if(recordPath){ const c=Float64Array.from(pcol).sort(); premiumPath[k]=c[n>>1]; }
   }
 
   const out=new Float64Array(n);
@@ -483,15 +520,22 @@ function runModel(P){
   const sharesArr=new Float64Array(n), heldArr=new Float64Array(n);   // per-path terminal diluted share count and stack size
   let pPause=0,pUnder=0,pForced=0,soldSum=0,pStrc=0,exitSum=0,pSaleDiv=0;
   let tightSum=0,wideSum=0,openSum=0; const strcArr=new Float64Array(n); const soldDivArr=new Float64Array(n);
+  const mnavTstep = P.mnavMarketPath ? (P.mnavMarketPathT + P.entryGap*Math.exp(-P.kappa*P.horizon)) : 0;
   for(let i=0;i<n;i++){
     const bv=held[i]*btc[i], senior=S[i]+arr[i]+D[i];
     const bpsT=held[i]/Math.max(N[i],1);
     const netRatio=(bv-senior+R[i])/Math.max(bv,1);
-    let mnavT=premium(netRatio,sigLast[i],!paused[i],P.horizon,P);   // each path's FINAL volatility
-    if(P.stochVol && P.piVolKick>0 && !paused[i]){
-      const sigAncT=(P.btcModel==='gbm')?P.gbmVol:P.sigNow*Math.pow((T0+P.horizon)/T0,-P.volDecay);
-      const ex=Math.max(sigLast[i]/sigAncT-1,0);
-      mnavT+=P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
+    let mnavT;
+    if(P.mnavMarketPath){ mnavT=mnavTstep; }
+    else {
+      const thetaT=Math.min(held[i]/P.sAcc,0.999999), gConcT=Math.pow(Math.max((1-thetaT)/(1-theta0),0),P.pConc);
+      mnavT=premium(netRatio,sigLast[i],!paused[i],P.horizon,P,gConcT);   // each path's FINAL volatility
+      if(P.stochVol && P.piVolKick>0 && !paused[i]){
+        const sigAncT=(P.btcModel==='gbm')?P.gbmVol:P.sigNow*Math.pow((T0+P.horizon)/T0,-P.volDecay);
+        const ex=Math.max(sigLast[i]/sigAncT-1,0);
+        mnavT+=gConcT*P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
+      }
+      if(recordPath) tcol[i]=mnavT;
     }
     const exitVal=bpsT*mnavT;
     exitArr[i]=exitVal; exitSum+=exitVal;
@@ -502,6 +546,7 @@ function runModel(P){
     tightSum+=strcTight[i]; wideSum+=strcWide[i]; openSum+=strcOpen[i]; strcArr[i]=btcFromStrc[i]/P.btcHeld;
     sharesArr[i]=N[i]; heldArr[i]=held[i];
   }
+  if(recordPath){ const c=Float64Array.from(tcol).sort(); premiumPathT=c[n>>1]; }
   const strcCounted=Math.max(steps-strcBurn,1);
   const strcSorted=Float64Array.from(strcArr).sort();
   const btcViaStrcMed=pctl(strcSorted,0.5);
@@ -513,15 +558,16 @@ function runModel(P){
   const soldDivSorted=Float64Array.from(soldDivArr).sort();
   // Stable, tie-out exit figures: median terminal stack divided by median terminal share count.
   const stackExitMed=pctl(Float64Array.from(heldArr).sort(),0.5);     // median BTC stack at exit
+  const thetaExitMed=stackExitMed/P.sAcc;                             // median terminal share of accessible supply
   const sharesExitMed=pctl(Float64Array.from(sharesArr).sort(),0.5);  // median diluted shares at exit
   const bpsExitMed=stackExitMed/Math.max(sharesExitMed,1);            // BPS that ties out: stack / shares
   return {out, pPause:pPause/n, pUnder:pUnder/n, pForced:pForced/n, pStrc:pStrc/n,
           pSaleDiv:pSaleDiv/n, soldDivMed:pctl(soldDivSorted,0.5),
           soldFrac:soldSum/n/P.btcHeld, mnav0, amp0:(P.prefPar+D0)/(P.btcHeld*P.btcSpot),
           strcTightAvg:tightSum/n/strcCounted, strcWideAvg:wideSum/n/strcCounted,
-          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, bpsExitMed, stackExitMed,
+          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, bpsExitMed, stackExitMed, thetaExitMed,
           bpsEntry:P.btcHeld/Math.max(P.shares,1),
-          fairValueMed, fairValueMean, priceNow:P.mstrPrice};
+          fairValueMed, fairValueMean, priceNow:P.mstrPrice, premiumPath, premiumPathT, justifiedEntry:P.justifiedEntry};
 }
 
 function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=Math.ceil(i);
@@ -605,6 +651,7 @@ $('run').addEventListener('click',()=>{
     btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
     wma200:num('wma200'), dimLagFactor:1.75, gbmLagFactor:1.10,
     btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
+    sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
     expn:num('expn'), sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
     ampTarget:num('ampTarget'), ampHigh:num('ampHigh'), ampLow:0.30,
@@ -641,7 +688,14 @@ $('run').addEventListener('click',()=>{
   };
   $('run').textContent='Simulating…';
   setTimeout(()=>{
-    const res=runModel(P);
+    // 1) Market pass — the market's structural-premium PATH under its Bitcoin outlook (the premium the price reverts to / follows).
+    const resM=runModel(Object.assign({},P,{btcModel:$('btcModelMkt').value,fairPass:true,recordPath:true}));
+    const mnavMarketPath=resM.premiumPath, mnavMarketPathT=resM.premiumPathT;
+    // 2) Your passes — today's quote reverts toward that path and follows it; your Bitcoin model drives BPS / your return.
+    const res=runModel(Object.assign({},P,{mnavMarketPath,mnavMarketPathT}));
+    const resFair=runModel(Object.assign({},P,{mnavMarketPath,mnavMarketPathT,fairPass:true}));
+    res.fairValueMed=resFair.fairValueMed; res.fairValueMean=resFair.fairValueMean;
+    res.mktEntry=resM.justifiedEntry; res.mktExit=mnavMarketPathT;
     const out=res.out, rp=P.rp;
     const sorted=Float64Array.from(out).sort();
     const med=pctl(sorted,0.5);
@@ -676,15 +730,15 @@ $('run').addEventListener('click',()=>{
       cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
       cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
       cell('Entry mNAV (today)',res.mnav0.toFixed(2)+'×')+
-      cell('Rational mNAV (fair)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('P(beat BTC) after hurdle',(beatAfter*100).toFixed(0)+'%',beatAfter>=0.5?'pos':'neg')+
+      cell('Market rational mNAV (entry→exit)',res.mktEntry.toFixed(2)+'→'+res.mktExit.toFixed(2)+'×')+
+      cell('Your personal rational mNAV (fair)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
       cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
       cell('BPS at Entry',fmtSats(res.bpsEntry))+
       cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
       cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
+      cell('Share of accessible supply',(res.thetaExitMed*100).toFixed(1)+'%')+
       cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
-      cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%')+
-      cell('STRC above $97 / $90',(res.strcTightAvg*100).toFixed(0)+'% / '+(res.strcWideAvg*100).toFixed(0)+'%');
+      cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%');
     $('rHorizon').textContent=P.horizon;
     $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
     $('results').style.display='block';
