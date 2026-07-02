@@ -61,7 +61,7 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
-  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Holding your own coins is the benchmark: one BTC stays one BTC, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR beats that, after a counterparty-risk hurdle — an annual rate that compounds over your horizon and that the equity must clear in Bitcoin terms. Set the hurdle negative to credit the wrapper's convenience — no key management, no ETF fee — over self-custody; that raises the fair mNAV. The tool runs a Monte Carlo over the Bitcoin price (four models to choose from) and the policy rate, then propagates Strategy's full capital structure to a fair premium: the mNAV at which the equity beats self-custody half the time. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, your personal Bitcoin price model, and the overall market's Bitcoin price model for the holding period.</b> The market's Bitcoin outlook sets the structural premium MSTR trades at — the level the price reverts to and follows over the hold. Your own model drives your Bitcoin-denominated return through the BPS (Bitcoin-per-share) accretion it produces. mNAV here is MSTR's equity market cap (share price × diluted shares) over the dollar value of its Bitcoin; the results also report two capital-structure views of that same fair value — the <b>enterprise mNAV</b> (the whole capital stack, equity plus preferreds and convertibles net of the cash reserve, over gross Bitcoin) and the <b>net-assets mNAV</b> (equity over the Bitcoin backing that remains after those senior claims). The Assumptions fields are pre-filled with a snapshot you can edit to match current values.</p>
+  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Holding your own coins is the benchmark: one BTC stays one BTC, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR beats that, after a counterparty-risk hurdle — an annual rate that compounds over your horizon and that the equity must clear in Bitcoin terms. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, and your Bitcoin price model.</b> The tool runs a single Monte Carlo over the Bitcoin price (four models to choose from) and the policy rate, propagating Strategy's full capital structure with the Bitcoin Per Share of Common Stock (BPS) and the common stock mNAV premium computed endogenously along every path. mNAV here is MSTR's equity market cap (share price × diluted shares) over the dollar value of its Bitcoin. The results also report two capital-structure views of that same fair value — the <b>enterprise mNAV</b> (the whole capital stack, equity plus preferreds and convertibles net of the cash reserve, over gross Bitcoin) and the <b>net-assets mNAV</b> (equity over the Bitcoin backing that remains after those senior claims). The assumptions fields are pre-filled with a snapshot you can edit to match current values.</p>
   <p style="margin:-8px 0 18px;font-size:13.5px;"><a href="whitepaper.pdf" target="_blank" rel="noopener" style="color:var(--mstr);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px;">📄&nbsp; Read the full white paper (PDF) &rarr;</a></p>
 
   <section>
@@ -72,7 +72,7 @@
     </div>
     <div class="grid">
       <div class="f"><label>Your Bitcoin price model</label><select id="btcModel"><option value="gbm">GBM — flat 10%/yr</option><option value="dr1">Diminishing Returns 20&#8594;10% / 20 yrs</option><option value="dr2">Diminishing Returns 30&#8594;15% / 20 yrs</option><option value="dr3" selected>Diminishing Returns 40&#8594;20% / 20 yrs</option></select></div>
-      <div class="f"><label>The market's Bitcoin outlook</label><select id="btcModelMkt"><option value="gbm" selected>GBM — flat 10%/yr</option><option value="dr1">Diminishing Returns 20&#8594;10% / 20 yrs</option><option value="dr2">Diminishing Returns 30&#8594;15% / 20 yrs</option><option value="dr3">Diminishing Returns 40&#8594;20% / 20 yrs</option></select>
+      <div class="f"><label>Volatility regime</label>
         <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:11.5px;color:var(--muted)"><input type="checkbox" id="stochVol" checked style="width:auto"> stochastic volatility (auto-calibrated regimes)</label></div>
     </div>
     <details>
@@ -121,11 +121,8 @@
         <div class="f"><label>Corridor reversion speed θ (/yr)</label><input id="revert" value="0.50"></div>
         <div class="f"><label>Amplification target</label><input id="ampTarget" value="0.45"></div>
         <div class="f"><label>Amplification ceiling</label><input id="ampHigh" value="0.60"></div>
-        <div class="f"><label>Durable premium floor π_floor</label><input id="piFloor" value="0.15"></div>
-        <div class="f"><label>Convexity premium π_convex</label><input id="piConvex" value="0.30"></div>
         <div class="f"><label>Price impact: concentration coef k_perm</label><input id="kPerm" value="0.25"></div>
         <div class="f"><label>Price impact: buy-size coef k_temp</label><input id="kTemp" value="2.0"></div>
-        <div class="f"><label>Premium concentration-decay exponent p_conc</label><input id="pConc" value="1.0"></div>
         <div class="f"><label>STRC carry margin (%/yr)</label><input id="carryMargin" value="0"></div>
         <div class="f"><label>Reserve target — high (months of div)</label><input id="resHigh" value="24"></div>
         <div class="f"><label>Reserve refill trigger (months)</label><input id="resLow" value="12"></div>
@@ -143,9 +140,20 @@
         <div class="f"><label>BTC re-rating / shock (%, +=debasement)</label><input id="btcJumpMean" value="10"></div>
         <div class="f"><label>BTC re-rating std (%)</label><input id="btcJumpStd" value="15"></div>
         <div class="f"><label>Accretive ATM (issue into strength, stack BTC)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="accretiveOn" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Accretive ATM: min mNAV to issue</label><input id="accretiveMnavMin" value="1.05"></div>
+        <div class="f"><label>Accretive ATM: min mNAV to issue (capacity channel off)</label><input id="accretiveMnavMin" value="1.01"></div>
+        <div class="f"><label>Collateral-capacity ATM: common issuance at sub-1 mNAV unlocks STRC capacity</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="atmCollatChannel" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Accretive ATM hard floor (mNAV)</label><input id="atmAbsFloor" value="0.72"></div>
+        <div class="f"><label>Market capitalization duration D (yrs of excess BY priced)</label><input id="byDur" value="2.0"></div>
+        <div class="f"><label>Momentum kernel: upside slope &kappa;&#8314;</label><input id="byKappaUp" value="1.10"></div>
+        <div class="f"><label>Momentum kernel: neutral forward BY (%/yr)</label><input id="byNeutral" value="15"></div>
+        <div class="f"><label>Forward BY: weight on momentum</label><input id="byWMom" value="0.50"></div>
+        <div class="f"><label>Entry BTC momentum (trailing EMA, %/yr)</label><input id="gEma0" value="-20"></div>
+        <div class="f"><label>Entry trailing realized BY (%/yr)</label><input id="byEma0" value="21.5"></div>
         <div class="f"><label>Accretive ATM: pace × premium (slope)</label><input id="accretiveSlope" value="0.10"></div>
         <div class="f"><label>Accretive ATM: max % BTC value / qtr</label><input id="accretiveCap" value="12"></div>
+        <div class="f"><label>Discount buyback (sell BTC to retire shares below NAV)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="buybackOn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Buyback: pace &times; discount (slope)</label><input id="buybackSlope" value="0.10"></div>
+        <div class="f"><label>Buyback: max % BTC value / qtr</label><input id="buybackCap" value="5"></div>
         <div class="f"><label>SOFR / policy-rate model</label><select id="rateModel"><option value="vasicek">Vasicek (mean-reverting)</option><option value="cir">CIR (√r vol, no neg)</option><option value="randomwalk">Random walk (driftless)</option><option value="jumpdiff" selected>Jump-diffusion (fiscal shocks)</option></select></div>
         <div class="f"><label>Constrained policy rate (lean against SOFR above threshold)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="repressionOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Constrained policy rate: threshold SOFR (%)</label><input id="repressionThreshold" value="4.5"></div>
@@ -173,7 +181,6 @@
         <div class="f"><label>Cumulative div fraction</label><input id="cumFrac" value="0.85"></div>
         <div class="f"><label>Arrears compound (%/yr)</label><input id="arrComp" value="10"></div>
         <div class="f"><label>Simulated paths</label><input id="paths" value="5000"></div>
-        <div class="f"><label>Premium reversion κ (/yr)</label><input id="kappa" value="0.25"></div>
       </div>
     </details>
   </section>
@@ -190,10 +197,10 @@
 
   <section id="results" style="display:none;margin-top:14px">
     <div class="seclabel">Result — MSTR return in BTC terms over <span id="rHorizon"></span> yr</div>
-    <div class="stats" id="statsGrid"></div>
     <canvas id="hist" width="720" height="210"></canvas>
     <div class="charthelp">Distribution of MSTR's <b>annual return measured in Bitcoin</b>, across all simulated paths. The white line is holding your own coins (0%); the red line is your hurdle. Bars to the right of the red line <b style="color:#5fd39b">clear the hurdle</b>; left of the white line they <b style="color:#c47a55">lose to simply holding BTC</b>.</div>
     <div class="charthelp" id="medlbl" style="margin-top:3px"></div>
+    <div class="stats" id="statsGrid" style="margin-top:14px"></div>
   </section>
 
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
@@ -225,14 +232,6 @@ function randn(){ if(spare!==null){const s=spare;spare=null;return s;}
   let u=0,v=0,s=0; do{u=Math.random()*2-1;v=Math.random()*2-1;s=u*u+v*v;}while(s>=1||s===0);
   const m=Math.sqrt(-2*Math.log(s)/s); spare=v*m; return u*m; }
 
-function premium(netRatio,sigma,flywheelOn,tHeld,P,gConc){
-  if(gConc===undefined)gConc=1;
-  // concentration brake: the optionality premium is the capitalized value of FUTURE accretion, so it decays toward 0
-  // as Strategy's share of accessible supply rises (gConc -> 0), leaving only the hard backing ratio.
-  const pi = gConc*(P.piFloor + (flywheelOn ? P.piConvex*(sigma/P.sigRef) : 0));
-  const disloc = P.entryGap*Math.exp(-P.kappa*tHeld);   // gap between observed entry mNAV and justified, decays
-  return Math.max(netRatio + pi + disloc, P.mnavFloor);
-}
 
 // Execution price for Strategy's own marginal BTC purchases: spot plus a slippage markup that rises with the firm's
 // share of accessible supply (permanent scarcity) and with the size of the buy against the thinning free float
@@ -281,14 +280,8 @@ function runModel(P){
   const entryCost=P.mstrPrice/P.btcSpot;                    // BTC paid per share (mode-independent)
   const r0=0;        // spot == fair: OU residual (DR models) starts at 0
   const devGbm0=0;   // no catch-up anywhere
-  // anchor the premium path to the ACTUAL entry mNAV: gap vs justified-at-entry, decaying over the hold
-  const bv0=P.btcHeld*P.btcSpot;
-  const nr0=(bv0-(P.prefPar+D0)+P.reserve)/bv0;
-  const pi0=P.piFloor+P.piConvex*(P.sigNow/P.sigRef);
-  // Justified premium = STRUCTURAL floor (backing + durable premium), ~nr0+pi0 at entry. Observed entry mNAV reverts
-  // toward it; fair pass anchors there directly (price-independent).
-  P.entryGap = P.fairPass ? 0 : (mnav0-(nr0+pi0));
-  P.justifiedEntry = nr0+pi0;
+  // ENDOGENOUS single pass: the premium is the momentum-calibrated BY-hurdle fixed point computed in-loop;
+  // the model's justified entry is its own first-step premium (recorded below). No injected path, no entry gap.
   const theta0 = P.btcHeld/P.sAcc;   // Strategy's share of accessible supply today (concentration-brake baseline)
   // Market-pass recorders: median STRUCTURAL-premium path under the market's BTC outlook, fed into the user passes.
   const recordPath=!!P.recordPath, pcol=recordPath?new Float64Array(n):null, tcol=recordPath?new Float64Array(n):null;
@@ -318,11 +311,21 @@ function runModel(P){
   const btcSold=new Float64Array(n);
   const divForcedSale=new Uint8Array(n), divForcedSaleEver=new Uint8Array(n), btcSoldDiv=new Float64Array(n);  // last-resort dividend BTC sale
   const btcFromStrc=new Float64Array(n);                                   // BTC bought via STRC ATM
+  const btcSoldBb=new Float64Array(n);                                     // BTC sold to fund discount buybacks
   const strcTight=new Float64Array(n), strcWide=new Float64Array(n), strcOpen=new Float64Array(n);
   const strcBurn=4;                                                        // let the initial sub-par excursion revert
   const yccOn=new Uint8Array(n);            // per-path YCC activation (for the "breach" trigger)
   const yvol=new Float64Array(n);           // log-vol OU state (stochastic-vol overlay)
   const sigLast=new Float64Array(n).fill(P.sigNow);  // each path's final vol (seeded to shared anchor)
+  // --- ENDOGENOUS BY-HURDLE state ---
+  const byEma=new Float64Array(n).fill(P.byEma0);     // trailing realized Bitcoin Yield (physical, per path)
+  const gEma=new Float64Array(n).fill(P.gEma0);       // adaptive BTC-growth belief (realized-return EMA)
+  const bpsPrev=new Float64Array(n).fill(P.btcHeld/Math.max(N0,1));
+  const hLast=new Float64Array(n).fill(0.13);         // persisted structural hurdle (terminal mark)
+  const atmFracLag=new Float64Array(n).fill(0.5);     // lagged STRC duty cycle (capacity estimate input)
+  const strcRetired=new Float64Array(n);              // cumulative STRC par retired (USD notional)
+  const floorEffArr=new Float64Array(n).fill(P.accretiveMnavMin);  // entry-step effective ATM floor
+  const aBy=1-Math.exp(-Math.LN2/P.byEmaHl*dt), aG=1-Math.exp(-Math.LN2/P.gEmaHl*dt);
   const vovS2=P.vovVol*P.vovVol/(2*P.vovRevert);  // stationary variance of log-vol (mean-preservation)
 
   let drTrend=P.btcSpot;   // deterministic DR trend, compounds from spot at the arithmetic CAGR
@@ -335,8 +338,6 @@ function runModel(P){
     const cT=drCinf+(drC0-drCinf)*Math.exp(-P.dimDecay*tHeld);   // arithmetic CAGR at this step
     drTrend=drTrend*Math.pow(1+cT,dt);                            // DR trend compounding from spot
     const ddev=0;   // no catch-up
-    const mnavStep = P.mnavMarketPath ? (P.mnavMarketPath[k] + P.entryGap*Math.exp(-P.kappa*tHeld)) : 0;
-    const gBtcStep = (P.btcModel==='gbm') ? P.gbmDrift : (drCinf+(drC0-drCinf)*Math.exp(-P.dimDecay*tHeld));   // local BTC forward growth, for STRC carry test
     for(let i=0;i<n;i++){
       const zb=randn(), zi=randn();
       const zr=P.ust10Corr*zb+Math.sqrt(1-P.ust10Corr*P.ust10Corr)*zi;
@@ -352,12 +353,14 @@ function runModel(P){
         if(P.jointShock){ btcStep=P.btcJumpMean+P.btcJumpStd*randn(); jumpCum[i]+=btcStep; }
       }
       // --- Bitcoin price: selectable model ---
+      const btcPrev=btc[i];
       if(P.btcModel==='gbm'){
         btc[i]=btc[i]*Math.exp(Math.log(1+P.gbmDrift)*dt+sigI*sq*zb+btcStep);
       } else {
         rr[i]+= -P.revert*rr[i]*dt + nu*sq*zb;
         btc[i]=drTrend*Math.exp(rr[i]+jumpCum[i]);
       }
+      gEma[i]+=aG*(Math.log(Math.max(btc[i],1e-9)/Math.max(btcPrev,1e-9))/dt - gEma[i]);   // adaptive belief from REALIZED returns
       // --- policy / short rate (SOFR proxy): selectable model ---
       const r10was=r10[i];
       let g;
@@ -377,24 +380,47 @@ function runModel(P){
       const senior=S[i]+arr[i]+D[i];
       const netRatio=(bv-senior+R[i])/Math.max(bv,1);
       if(netRatio<0) underEver[i]=1;
-      let mnav;
-      if(P.mnavMarketPath){ mnav=mnavStep; }   // user pass: follows the market's structural-premium path + reverting dislocation
-      else {
-        const thetaC=Math.min(held[i]/P.sAcc,0.999999), gConc=Math.pow(Math.max((1-thetaC)/(1-theta0),0),P.pConc);
-        mnav=premium(netRatio,sigI,!paused[i],tHeld,P,gConc);
-        // CONVEX UPSIDE: a vol spike above the anchor balloons the premium, gated on strength; faded by gConc too,
-        // since the upside flywheel likewise capitalizes future accretion.
-        if(P.stochVol && P.piVolKick>0 && !paused[i]){
-          const ex=Math.max(sigI/sigAnchor-1,0);
-          mnav+=gConc*P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
-        }
-        if(recordPath) pcol[i]=mnav;
+      // === ENDOGENOUS MOMENTUM-CALIBRATED BY-HURDLE PREMIUM: m = net_ratio + (BY_fwd - h)*D, damped fixed point.
+      //     h = STRUCTURAL required STRC yield (coverage, vol, rating; NO runway/distress adders). BY_fwd blends
+      //     trailing realized BY, the momentum kernel phi(g), and current issuance capacity (loop gain << 1). ===
+      const ampNow=(S[i]+D[i])/Math.max(bv,1);
+      const covAddP=P.strcCovSens*Math.max(ampNow-P.strcCovFloor,0);
+      const volAddP=P.strcVolSens*(P.stochVol?Math.max(sigI-P.strcVolRef,0):0);
+      const ratP=P.creditMigrationOn?P.creditMaxTighten*cq[i]:0;
+      const basP=(P.baselCollateralOn && tHeld>=P.baselYear)?P.baselTighten:0;
+      const hS=r10[i]+Math.max(P.strcSpreadFloor+covAddP+volAddP-ratP-basP,P.strcSpreadMin);
+      hLast[i]=hS;
+      const carryEst=gEma[i]>(cStrc[i]+P.carryMargin);
+      const capQtrP=P.maxIssue*bv;
+      const roomP=Math.max(P.ampTarget*bv-(S[i]+D[i]),0);
+      const byStrcP=carryEst?(atmFracLag[i]*Math.min(roomP,capQtrP)/Math.max(bv,1)):0;
+      const uP=(P.atmCollatChannel?Math.min(Math.max(1-roomP/Math.max(capQtrP,1e-9),0),1)*(carryEst?1:0):0);
+      const phiP=P.byNeutral+P.byKappaUp*Math.max(gEma[i]-P.byMomG0,0)-P.byKappaDn*Math.max(-gEma[i],0);
+      let mnav=Math.max(netRatio+(byEma[i]-hS)*P.byDur,P.mnavFloor);
+      for(let it=0;it<6;it++){
+        let fA=0, atmBy=0;
+        if(P.atmCollatChannel){
+          const pkg=(1+P.ampTarget*uP)*mnav-1;
+          if(pkg>0 && mnav>=P.atmAbsFloor){ fA=Math.min(P.accretiveSlope*pkg,P.accretiveCap); atmBy=fA*Math.max(pkg,0)/Math.max(mnav,1e-9); }
+        } else if(mnav>=P.accretiveMnavMin){ fA=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap); atmBy=fA*Math.max(mnav-1,0); }
+        const byStep=atmBy+byStrcP;
+        const byFwd=P.byWReal*byEma[i]+P.byWMom*phiP+P.byWCap*(byStep/dt);
+        mnav=0.5*mnav+0.5*Math.max(netRatio+(byFwd-hS)*P.byDur,P.mnavFloor);
       }
+      if(k===0) floorEffArr[i]=P.atmCollatChannel?Math.max(1/(1+P.ampTarget*uP),P.atmAbsFloor):P.accretiveMnavMin;
+      if(recordPath) pcol[i]=mnav;
       const price=mnav*bv/Math.max(N[i],1);
 
       // --- PROACTIVE accretive common ATM: issue into strength; pace SCALES WITH THE PREMIUM ---
-      if(P.accretiveOn && mnav>=P.accretiveMnavMin && btc[i]>btcRef[i] && !paused[i]){
-        const frac=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap);  // drive a truck through a big premium
+      let doAtm=false, fracAtm=0;
+      if(P.accretiveOn && btc[i]>btcRef[i] && !paused[i]){
+        if(P.atmCollatChannel){
+          const pkgA=(1+P.ampTarget*uP)*mnav-1;                          // packaged gross-BY accretion per $
+          if(pkgA>0 && mnav>=P.atmAbsFloor){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*pkgA,P.accretiveCap); }
+        } else if(mnav>=P.accretiveMnavMin){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap); }
+      }
+      if(doAtm){
+        const frac=fracAtm;
         const atmUsd=frac*bv;
         N[i]+=atmUsd/Math.max(price,1e-9);
         held[i]+=atmUsd/execPx(atmUsd,held[i],btc[i],P);   // #1 float-depletion slippage on Strategy's own buys
@@ -422,7 +448,7 @@ function runModel(P){
       const reqStrc=r10[i]+spread;
       // === OFFERED COUPON: ratchet toward required yield to defend par, in small monthly steps, capped by
       //     AFFORDABILITY (reserve-derived) under a willingness ceiling. Self-limiting: a higher coupon shortens runway. ===
-      const cmax=Math.min(Math.max(R[i]/(P.strcAffordFloorYr*P.prefPar),P.strcRateFloor),P.strcCmaxWilling);
+      const cmax=Math.min(Math.max(R[i]/(P.strcAffordFloorYr*Math.max(Sstrc,0.05*P.prefPar)),P.strcRateFloor),P.strcCmaxWilling);
       const cTarget=Math.min(reqStrc,cmax);
       let dc=cTarget-cStrc[i]; if(dc>P.strcCouponStep)dc=P.strcCouponStep; else if(dc<-P.strcCouponStep)dc=-P.strcCouponStep;
       cStrc[i]=Math.min(Math.max(cStrc[i]+dc,P.strcRateFloor),P.strcCmaxWilling);
@@ -442,7 +468,7 @@ function runModel(P){
       const room=Math.max(desired-(S[i]+D[i]),0);
       const cap=P.maxIssue*bv;
       // #3 carry closure: proactive STRC-funded accumulation only while BTC forward growth clears the STRC coupon.
-      const carryOpen = gBtcStep > cStrc[i] + P.carryMargin;
+      const carryOpen = gEma[i] > cStrc[i] + P.carryMargin;   // ADAPTIVE: the firm believes realized returns
       if(!paused[i] && carryOpen){ const iss=atmFrac*Math.min(room,cap); S[i]+=iss; const coins=iss/execPx(iss,held[i],btc[i],P); held[i]+=coins; btcFromStrc[i]+=coins; }
 
       const divq=cpn[i]/4*S[i];
@@ -456,6 +482,14 @@ function runModel(P){
       if(healthy && R[i]<Rlow){
         let access=(P.ampHigh-amp)/Math.max(P.ampHigh-P.ampLow,1e-9); if(access<0)access=0; else if(access>1)access=1;
         const refill=access*P.resRefillSpeed*(Rhigh-R[i])*dt; N[i]+=refill/Math.max(price,1e-9); R[i]+=refill;
+      }
+      // At a sub-1 mNAV, common issuance is closed but the firm refills obligations by SELLING COINS (the June-2026
+      // playbook). Non-dilutive but shrinks the stack; realized BY carries the cost. Collateral-constrained.
+      if(!paused[i] && mnav<=P.engineMin && R[i]<Rlow){
+        let sellUsd=P.resRefillSpeed*(Rhigh-R[i])*dt;
+        const maxSell=Math.max(held[i]*btc[i]-(S[i]+D[i])/P.ampHigh,0);
+        if(sellUsd>maxSell)sellUsd=maxSell;
+        held[i]-=sellUsd/Math.max(btc[i],1e-9); btcSoldDiv[i]+=sellUsd/Math.max(btc[i],1e-9); R[i]+=sellUsd;
       }
 
       // small convert COUPON drag on still-outstanding tranches
@@ -481,6 +515,55 @@ function runModel(P){
         const pay=Math.min(arr[i],P.maxIssue*bv);
         N[i]+=pay/Math.max(price,1e-9); arr[i]-=pay;
       }
+      // --- PROACTIVE discount BUYBACK (mirror of the accretive ATM): sell BTC to retire shares when the equity
+      //     trades below NAV, raising BTC-per-share. Coverage-gated: dividend met, no forced sale, reserve healthy. ---
+      // === UNIFIED THRESHOLD: buy back exactly when the mNAV sits BELOW the effective accretive-ATM floor
+      //     (the packaged-accretion boundary incl. the collateral-capacity unlock). Issue above the floor, buy
+      //     back below it -- the two common-equity operations are mutually exclusive and can never fight. ===
+      const roomBb=Math.max(P.ampTarget*held[i]*btc[i]-(S[i]+D[i]),0);
+      const paceBb=P.maxIssue*held[i]*btc[i];
+      const uBb=Math.min(Math.max(1-roomBb/Math.max(paceBb,1e-9),0),1)*(carryOpen?1:0);
+      const bbFloor=P.atmCollatChannel?Math.max(1/(1+P.ampTarget*uBb),P.atmAbsFloor):P.accretiveMnavMin;
+      if(P.buybackOn && mnav<bbFloor && !pauseNow && !divForcedSale[i] && R[i]>=Rlow){
+        const bvBb=held[i]*btc[i], fracb=Math.min(P.buybackSlope*(1-mnav),P.buybackCap);
+        const priceBb=mnav*bvBb/Math.max(N[i],1);
+        let bbUsd=fracb*bvBb;
+        const maxSellBb=Math.max(bvBb-(S[i]+D[i])/P.ampHigh,0);            // collateral constraint on coin sales
+        if(bbUsd>maxSellBb)bbUsd=maxSellBb;
+        N[i]-=bbUsd/Math.max(priceBb,1e-9);        // shares retired at the current price
+        held[i]-=bbUsd/Math.max(btc[i],1e-9);      // BTC sold at spot to fund it
+        btcSoldBb[i]+=bbUsd/Math.max(btc[i],1e-9);
+      }
+      // === PREFERRED RETIREMENT (tender for discounted STRC): the common buyback one level up the stack.
+      //     Coin leg gated by opportunity cost (retirement yield beats holding coins); common leg gated by swap
+      //     accretion (the common's discount is shallower than the preferred's: m > px/par x (1+margin)). ===
+      if(P.strcRetireOn){
+        const pxFrac=strcPrice/P.strcPar, SstrcNow=Math.max(S[i]-S_fixed0,0);
+        if(pxFrac<=P.strcRetireMaxPx && SstrcNow>0 && !pauseNow && !divForcedSale[i] && R[i]>=Rlow){
+          const wantPar=Math.min(P.strcRetireSlope*(1-pxFrac),P.strcRetireCap)*SstrcNow;
+          const wantUsd=wantPar*pxFrac;
+          const retYield=cStrc[i]/Math.max(pxFrac,1e-9);
+          let coinUsd=0;
+          if(retYield>gEma[i]+P.strcRetireOcMargin){
+            coinUsd=Math.min(wantUsd,Math.max(held[i]*btc[i]-(S[i]+D[i])/P.ampHigh,0));
+          }
+          let comUsd=0;
+          if(mnav>pxFrac*(1+P.strcRetireSwapMargin)){
+            comUsd=Math.min(Math.max(wantUsd-coinUsd,0),P.strcRetireComFrac*held[i]*btc[i]);
+          }
+          const spend=coinUsd+comUsd, parRet=Math.min(spend/Math.max(pxFrac,1e-9),SstrcNow);
+          held[i]-=coinUsd/Math.max(btc[i],1e-9);
+          N[i]+=comUsd/Math.max(price,1e-9);
+          S[i]-=parRet; strcRetired[i]+=parRet;
+        }
+      }
+      // realized Bitcoin Yield this step from PHYSICAL coins-per-share (all channels; equity price never enters)
+      {
+        const bpsNow=held[i]/Math.max(N[i],1);
+        byEma[i]+=aBy*((bpsNow/Math.max(bpsPrev[i],1e-12)-1)/dt-byEma[i]);
+        bpsPrev[i]=bpsNow;
+      }
+      atmFracLag[i]=atmFrac;
       // RATING MIGRATION: season up when healthy (paying, above engine value, reserve in band); sticky downgrade on a pause
       if(P.creditMigrationOn){
         if(!pauseNow && mnav>P.engineMin && R[i]>=Rlow) cq[i]+=(1-cq[i])*P.creditSeasonUp*dt;
@@ -517,38 +600,36 @@ function runModel(P){
   const out=new Float64Array(n);
   const exitArr=new Float64Array(n);
   const sharesArr=new Float64Array(n), heldArr=new Float64Array(n);   // per-path terminal diluted share count and stack size
+  const SExit=new Float64Array(n), DExit=new Float64Array(n), arrExit=new Float64Array(n),
+        RExit=new Float64Array(n), bvExit=new Float64Array(n), cvShExit=new Float64Array(n);  // terminal capital structure
   let pPause=0,pUnder=0,pForced=0,soldSum=0,pStrc=0,exitSum=0,pSaleDiv=0;
-  let tightSum=0,wideSum=0,openSum=0; const strcArr=new Float64Array(n); const soldDivArr=new Float64Array(n);
-  const mnavTstep = P.mnavMarketPath ? (P.mnavMarketPathT + P.entryGap*Math.exp(-P.kappa*P.horizon)) : 0;
+  let tightSum=0,wideSum=0,openSum=0; const strcArr=new Float64Array(n); const soldDivArr=new Float64Array(n); const bbArr=new Float64Array(n);
   for(let i=0;i<n;i++){
     const bv=held[i]*btc[i], senior=S[i]+arr[i]+D[i];
     const bpsT=held[i]/Math.max(N[i],1);
     const netRatio=(bv-senior+R[i])/Math.max(bv,1);
-    let mnavT;
-    if(P.mnavMarketPath){ mnavT=mnavTstep; }
-    else {
-      const thetaT=Math.min(held[i]/P.sAcc,0.999999), gConcT=Math.pow(Math.max((1-thetaT)/(1-theta0),0),P.pConc);
-      mnavT=premium(netRatio,sigLast[i],!paused[i],P.horizon,P,gConcT);   // each path's FINAL volatility
-      if(P.stochVol && P.piVolKick>0 && !paused[i]){
-        const sigAncT=P.sigNow*Math.pow((T0+P.horizon)/T0,-P.volDecay);
-        const ex=Math.max(sigLast[i]/sigAncT-1,0);
-        mnavT+=gConcT*P.piVolKick*ex*ex*Math.min(Math.max(netRatio,0),1);
-      }
-      if(recordPath) tcol[i]=mnavT;
-    }
+    // terminal mark = the same BY-hurdle formula at the final state (trailing BY + momentum kernel; no capacity term)
+    const phiT=P.byNeutral+P.byKappaUp*Math.max(gEma[i]-P.byMomG0,0)-P.byKappaDn*Math.max(-gEma[i],0);
+    const byFwdT=P.byWReal*byEma[i]+P.byWMom*phiT;
+    const mnavT=Math.max(netRatio+(byFwdT-hLast[i])*P.byDur,P.mnavFloor);
+    if(recordPath) tcol[i]=mnavT;
     const exitVal=bpsT*mnavT;
     exitArr[i]=exitVal; exitSum+=exitVal;
     const mult=exitVal/entryCost;
     out[i]= mult>0 ? Math.pow(mult,1/P.horizon)-1 : -1;
     pPause+=pausedEver[i]; pUnder+=underEver[i]; pForced+=forcedSale[i]; soldSum+=btcSold[i]; pStrc+=strcUnavail[i];
     pSaleDiv+=divForcedSaleEver[i]; soldDivArr[i]=btcSoldDiv[i]/P.btcHeld;
-    tightSum+=strcTight[i]; wideSum+=strcWide[i]; openSum+=strcOpen[i]; strcArr[i]=btcFromStrc[i]/P.btcHeld;
+    tightSum+=strcTight[i]; wideSum+=strcWide[i]; openSum+=strcOpen[i]; strcArr[i]=btcFromStrc[i]/P.btcHeld; bbArr[i]=btcSoldBb[i]/P.btcHeld;
     sharesArr[i]=N[i]; heldArr[i]=held[i];
+    SExit[i]=S[i]; DExit[i]=D[i]; arrExit[i]=arr[i]; RExit[i]=R[i]; bvExit[i]=held[i]*btc[i];
+    let cvSh=0; for(let j=0;j<P.converts.length;j++){ if(convActive[j][i]) cvSh+=P.converts[j][1]/P.converts[j][2]; }
+    cvShExit[i]=cvSh;   // conversion shares still pre-counted in N for UNRESOLVED tranches
   }
   if(recordPath){ const c=Float64Array.from(tcol).sort(); premiumPathT=c[n>>1]; }
   const strcCounted=Math.max(steps-strcBurn,1);
   const strcSorted=Float64Array.from(strcArr).sort();
   const btcViaStrcMed=pctl(strcSorted,0.5);
+  const btcSoldBbMed=pctl(Float64Array.from(bbArr).sort(),0.5);   // median BTC sold to discount buybacks (frac of stack)
   // MSTR fair value = BTC spot * (exit BTC-backing per share, discounted at the hurdle)
   const exitSorted=Float64Array.from(exitArr).sort();
   const disc=Math.pow(1+P.rp,P.horizon);
@@ -564,9 +645,15 @@ function runModel(P){
           pSaleDiv:pSaleDiv/n, soldDivMed:pctl(soldDivSorted,0.5),
           soldFrac:soldSum/n/P.btcHeld, mnav0, amp0:(P.prefPar+D0)/(P.btcHeld*P.btcSpot),
           strcTightAvg:tightSum/n/strcCounted, strcWideAvg:wideSum/n/strcCounted,
-          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, bpsExitMed, stackExitMed, thetaExitMed,
+          strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, btcSoldBbMed, bpsExitMed, stackExitMed, thetaExitMed, sharesExitMed,
           bpsEntry:P.btcHeld/Math.max(P.shares,1),
-          fairValueMed, fairValueMean, priceNow:P.mstrPrice, premiumPath, premiumPathT, justifiedEntry:P.justifiedEntry};
+          strcRetiredMed:pctl(Float64Array.from(strcRetired).map(v=>v/Math.max(P.prefPar,1)).sort(),0.5),
+          SExitMed:pctl(Float64Array.from(SExit).sort(),0.5), DExitMed:pctl(Float64Array.from(DExit).sort(),0.5),
+          arrExitMed:pctl(Float64Array.from(arrExit).sort(),0.5), RExitMed:pctl(Float64Array.from(RExit).sort(),0.5),
+          bvExitMed:pctl(Float64Array.from(bvExit).sort(),0.5), cvShExitMed:pctl(Float64Array.from(cvShExit).sort(),0.5),
+          atmFloorEff0:pctl(Float64Array.from(floorEffArr).sort(),0.5),
+          fairValueMed, fairValueMean, priceNow:P.mstrPrice, premiumPath, premiumPathT,
+          justifiedEntry:(premiumPath&&premiumPath.length?premiumPath[0]:0)};
 }
 
 function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=Math.ceil(i);
@@ -650,15 +737,22 @@ $('run').addEventListener('click',()=>{
     btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
     wma200:num('wma200'), dimLagFactor:1.75,
     btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
-    sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
+    sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
     expn:num('expn'), sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
     ampTarget:num('ampTarget'), ampHigh:num('ampHigh'), ampLow:0.30,
-    piFloor:num('piFloor'), piConvex:num('piConvex'), sigRef:num('sigNow'), piVolKick:1.0,
+    sigRef:num('sigNow'),
     resHigh:num('resHigh'), resLow:num('resLow'), resFloorM:num('resFloorM'),
     sharesExCv:num('sharesExCv'),
     cumFrac:num('cumFrac'), arrComp:num('arrComp')/100,
-    nPaths:Math.max(500,Math.min(20000,Math.round(num('paths')))), kappa:num('kappa'),
+    nPaths:Math.max(500,Math.min(20000,Math.round(num('paths')))),
+    // --- endogenous BY-hurdle premium (momentum-calibrated) ---
+    byDur:num('byDur'), byKappaUp:num('byKappaUp'), byKappaDn:0.10, byNeutral:num('byNeutral')/100,
+    byWMom:num('byWMom'), byWReal:Math.max(0.85-num('byWMom'),0), byWCap:0.15, byMomG0:0.0,
+    byEma0:num('byEma0')/100, gEma0:num('gEma0')/100, byEmaHl:1.5, gEmaHl:1.0,
+    atmCollatChannel:$('atmCollatChannel').checked, atmAbsFloor:num('atmAbsFloor'),
+    strcRetireOn:true, strcRetireMaxPx:0.95, strcRetireSlope:0.30, strcRetireCap:0.10,
+    strcRetireSwapMargin:0.10, strcRetireOcMargin:0.0, strcRetireComFrac:0.02,
     mnavFloor:0.30, engineMin:1.00, maxIssue:0.05, fcf:0, tbill:0.04,
     mnavAtmFloor:num('mnavAtmFloor'), maxCommonAtm:num('maxCommonAtm')/100,
     btcForcedSaleOn:$('btcForcedSaleOn').checked, btcForcedSaleCapFrac:num('btcForcedSaleCapFrac')/100,
@@ -670,6 +764,7 @@ $('run').addEventListener('click',()=>{
     jumpInt:num('jumpInt'), jumpMean:num('jumpMean')/10000, jumpStd:num('jumpStd')/10000,
     jointShock:$('jointShock').checked, btcJumpMean:num('btcJumpMean')/100, btcJumpStd:num('btcJumpStd')/100,
     accretiveOn:$('accretiveOn').checked, accretiveMnavMin:num('accretiveMnavMin'), accretiveSlope:num('accretiveSlope'), accretiveCap:num('accretiveCap')/100, strengthAlpha:0.15,
+    buybackOn:$('buybackOn').checked, buybackSlope:num('buybackSlope'), buybackCap:num('buybackCap')/100,
     stochVol:$('stochVol').checked, vovRevert:3.0, vovVol:1.10,
     yccTrigger:$('yccTrigger').value, yccCap:num('yccCap')/100, yccStartYr:num('yccStartYr'), yccBreach:num('yccBreach')/100,
     repressionOn:$('repressionOn').checked, repressionThreshold:num('repressionThreshold')/100, repressionStrength:num('repressionStrength'),
@@ -687,14 +782,11 @@ $('run').addEventListener('click',()=>{
   };
   $('run').textContent='Simulating…';
   setTimeout(()=>{
-    // 1) Market pass — the market's structural-premium PATH under its Bitcoin outlook (the premium the price reverts to / follows).
-    const resM=runModel(Object.assign({},P,{btcModel:$('btcModelMkt').value,fairPass:true,recordPath:true}));
-    const mnavMarketPath=resM.premiumPath, mnavMarketPathT=resM.premiumPathT;
-    // 2) Your passes — today's quote reverts toward that path and follows it; your Bitcoin model drives BPS / your return.
-    const res=runModel(Object.assign({},P,{mnavMarketPath,mnavMarketPathT}));
-    const resFair=runModel(Object.assign({},P,{mnavMarketPath,mnavMarketPathT,fairPass:true}));
-    res.fairValueMed=resFair.fairValueMed; res.fairValueMean=resFair.fairValueMean;
-    res.mktEntry=resM.justifiedEntry; res.mktExit=mnavMarketPathT;
+    // SINGLE fully-endogenous pass: the premium is the momentum-calibrated BY-hurdle fixed point computed
+    // inside the simulation. Your Bitcoin model drives BOTH the realized path and (through realized momentum
+    // and yield) the premium the market grants along it.
+    const res=runModel(Object.assign({},P,{fairPass:true,recordPath:true}));
+    res.mktEntry=res.justifiedEntry; res.mktExit=res.premiumPathT;
     const out=res.out, rp=P.rp;
     const sorted=Float64Array.from(out).sort();
     const med=pctl(sorted,0.5);
@@ -738,22 +830,33 @@ $('run').addEventListener('click',()=>{
     const netMnav=(sSr<1)?ratEqXc/(1-sSr):Infinity;      // rational net-assets mNAV: ex-convert equity / BTC net of senior
     const entryEnt=entEqXc+sSr;                          // entry enterprise mNAV (today)
     const entryNet=(sSr<1)?entEqXc/(1-sSr):Infinity;     // entry net-assets mNAV (today)
+    // Exit reframings use the ACTUAL terminal capital structure (median components): senior = preferred par
+    // + arrears + remaining convert principal, net of the terminal reserve, over terminal gross BTC value; the
+    // equity leg strips only the conversion shares of tranches still unresolved at exit.
+    const seniorT=res.SExitMed+res.arrExitMed+res.DExitMed-res.RExitMed;
+    const sSrT=seniorT/Math.max(res.bvExitMed,1);
+    const xcRatioT=Math.max(res.sharesExitMed-res.cvShExitMed,1)/Math.max(res.sharesExitMed,1);
+    const exitEqXc=res.mktExit*xcRatioT;                 // exit equity mNAV, ex-convert leg (terminal basis)
+    const exitEnt=exitEqXc+sSrT;                         // exit enterprise mNAV (terminal capital structure)
+    const exitNet=(sSrT<1)?exitEqXc/(1-sSrT):Infinity;   // exit net-assets mNAV (terminal capital structure)
     $('statsGrid').innerHTML=
       cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
       cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
-      cell('Entry equity mNAV (today)',res.mnav0.toFixed(2)+'×')+
-      cell('Entry enterprise mNAV (today)',entryEnt.toFixed(2)+'×')+
-      cell('Entry net-assets mNAV (today)',(isFinite(entryNet)?entryNet.toFixed(2)+'×':'n/a'))+
-      cell('Market rational equity mNAV (entry→exit)',res.mktEntry.toFixed(2)+'→'+res.mktExit.toFixed(2)+'×')+
-      cell('Your rational equity mNAV',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational enterprise mNAV',entMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational net-assets mNAV',(isFinite(netMnav)?netMnav.toFixed(2)+'×':'n/a'),rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Your rational equity mNAV (today)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Your rational enterprise mNAV (today)',entMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Your rational net-assets mNAV (today)',(isFinite(netMnav)?netMnav.toFixed(2)+'×':'n/a'),rationalMnav>=res.mnav0?'pos':'neg')+
       cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
+      cell('Entry equity mNAV (today)',res.mnav0.toFixed(2)+'×')+
+      cell('Exit equity mNAV',res.mktExit.toFixed(2)+'×',res.mktExit>=res.mnav0?'pos':'neg')+
+      cell('Entry enterprise mNAV (today)',entryEnt.toFixed(2)+'×')+
+      cell('Exit enterprise mNAV',exitEnt.toFixed(2)+'×',exitEnt>=entryEnt?'pos':'neg')+
+      cell('Entry net-assets mNAV (today)',(isFinite(entryNet)?entryNet.toFixed(2)+'×':'n/a'))+
+      cell('Exit net-assets mNAV',(isFinite(exitNet)?exitNet.toFixed(2)+'×':'n/a'),(isFinite(exitNet)&&isFinite(entryNet)&&exitNet>=entryNet)?'pos':'neg')+
       cell('BPS at Entry',fmtSats(res.bpsEntry))+
       cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
       cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
-      cell('Share of accessible supply',(res.thetaExitMed*100).toFixed(1)+'%')+
       cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
+      cell('BTC Sold to Buyback MSTR',fmtStack(res.btcSoldBbMed*P.btcHeld))+
       cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%');
     $('rHorizon').textContent=P.horizon;
     $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
