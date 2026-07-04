@@ -80,16 +80,17 @@
       <div class="grid">
         <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="61500"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="61000"></div>
+        <div class="f"><label>BTC Trailing 200-wk realized CAGR (%/yr)</label><input id="gTrail" value="28"></div>
+        <div class="derived" id="derivedSnap" style="flex-basis:100%"></div>
         <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="100.00"></div>
         <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="88.66"></div>
-        <div class="f"><label>Diluted shares outstanding</label><input id="shares" value="398721017"></div>
+        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="398721017"></div>
       </div>
     </details>
     <details>
       <summary>Strategy balance sheet ▾</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
-        <div class="f"><label>Accessible BTC supply (lost coins excluded)</label><input id="sAcc" value="17300000"></div>
         <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="2550000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
@@ -115,6 +116,7 @@
     <details>
       <summary>Model parameters ▾</summary>
       <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Accessible BTC supply (lost coins excluded)</label><input id="sAcc" value="17300000"></div>
         <div class="f"><label>Power-law exponent n</label><input id="expn" value="5.77"></div>
         <div class="f"><label>BTC relative vol now σ (log)</label><input id="sigNow" value="0.50"></div>
         <div class="f"><label>Vol decay γ (σ∝age^−γ)</label><input id="volDecay" value="1.0"></div>
@@ -131,6 +133,8 @@
         <div class="f"><label>Below-NAV ATM cap (% BTC val/qtr)</label><input id="maxCommonAtm" value="3"></div>
         <div class="f"><label>Last-resort BTC sale (sell BTC to fund dividend before pausing)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="btcForcedSaleOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Last-resort BTC sale: max % of stack / qtr</label><input id="btcForcedSaleCapFrac" value="5"></div>
+        <div class="f"><label>Anchor trend to 200-WMA fair value (de-lagged; spot converges to trend)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="anchorWma" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Dislocation half-life (yrs)</label><input id="disHl" value="1.25"></div>
         <div class="f"><label>GBM median CAGR (%/yr)</label><input id="gbmDrift" value="10"></div>
         <div class="f"><label>DR decay &lambda; (/yr, all DR models)</label><input id="dimDecay" value="0.15"></div>
         <div class="f"><label>Jump intensity (jumps/yr)</label><input id="jumpInt" value="0.15"></div>
@@ -287,7 +291,15 @@ function runModel(P){
   const recordPath=!!P.recordPath, pcol=recordPath?new Float64Array(n):null, tcol=recordPath?new Float64Array(n):null;
   const premiumPath=recordPath?new Float64Array(steps):null; let premiumPathT=null;
 
-  const btc=new Float64Array(n).fill(P.btcSpot);
+  // 200-WMA fair-value anchor: de-lag the observed WMA by the analytic factor gT/(1-e^{-gT}) (T=200wk, g=realized
+  // trailing growth). The spot/fair gap d0=ln(spot/F0) decays with half-life disHl, applied identically to every
+  // model OUTSIDE its stochastic machinery; anchor off -> F0=spot, d0=0 (from-spot regime).
+  const T_W=200*7/365.25;
+  let F0=P.btcSpot, d0=0;
+  if(P.anchorWma&&P.wma200>0){ const gT=Math.max(P.gTrail,1e-6)*T_W; F0=P.wma200*gT/(1-Math.exp(-gT)); d0=Math.log(P.btcSpot/F0); }
+  const kapDis=Math.LN2/Math.max(P.disHl,1e-6);
+  const btc=new Float64Array(n).fill(P.btcSpot);      // observed price: always starts at spot
+  const btcCore=new Float64Array(n).fill(F0);         // model process: starts at the de-lagged fair price
   const held=new Float64Array(n).fill(P.btcHeld);
   const S=new Float64Array(n).fill(P.prefPar);
   const S_fixed0=(1-P.strcWeight)*P.prefPar;   // STRF/STRK/STRD/STRE: fixed-rate, not issued further (constant $)
@@ -328,16 +340,15 @@ function runModel(P){
   const aBy=1-Math.exp(-Math.LN2/P.byEmaHl*dt), aG=1-Math.exp(-Math.LN2/P.gEmaHl*dt);
   const vovS2=P.vovVol*P.vovVol/(2*P.vovRevert);  // stationary variance of log-vol (mean-preservation)
 
-  let drTrend=P.btcSpot;   // deterministic DR trend, compounds from spot at the arithmetic CAGR
+  let drTrend=F0;   // deterministic DR trend, compounds from F0   // deterministic DR trend, compounds from F0 at the arithmetic CAGR
   for(let k=0;k<steps;k++){
     const tHeld=(k+1)*dt, calT=T0+tHeld, days=calT*365.25;
     const fv=A*Math.pow(days,P.expn);
     const sigAnchor=P.sigNow*Math.pow(calT/T0,-P.volDecay);   // shared age-decaying vol for all three models
     const sq=Math.sqrt(dt);
-    // diminishing-returns trend grows from the model's FAIR VALUE (lag x 200WMA), CAGR decaying to terminal
     const cT=drCinf+(drC0-drCinf)*Math.exp(-P.dimDecay*tHeld);   // arithmetic CAGR at this step
-    drTrend=drTrend*Math.pow(1+cT,dt);                            // DR trend compounding from spot
-    const ddev=0;   // no catch-up
+    drTrend=drTrend*Math.pow(1+cT,dt);                            // DR trend compounding from F0
+    const disFac=Math.exp(d0*Math.exp(-kapDis*tHeld));            // spot->fair dislocation factor (decays to 1)
     for(let i=0;i<n;i++){
       const zb=randn(), zi=randn();
       const zr=P.ust10Corr*zb+Math.sqrt(1-P.ust10Corr*P.ust10Corr)*zi;
@@ -352,14 +363,15 @@ function runModel(P){
         rateJump=P.jumpMean+P.jumpStd*randn();
         if(P.jointShock){ btcStep=P.btcJumpMean+P.btcJumpStd*randn(); jumpCum[i]+=btcStep; }
       }
-      // --- Bitcoin price: selectable model ---
+      // --- Bitcoin price: core compounds from F0; observed = core x dislocation factor ---
       const btcPrev=btc[i];
       if(P.btcModel==='gbm'){
-        btc[i]=btc[i]*Math.exp(Math.log(1+P.gbmDrift)*dt+sigI*sq*zb+btcStep);
+        btcCore[i]=btcCore[i]*Math.exp(Math.log(1+P.gbmDrift)*dt+sigI*sq*zb+btcStep);
       } else {
         rr[i]+= -P.revert*rr[i]*dt + nu*sq*zb;
-        btc[i]=drTrend*Math.exp(rr[i]+jumpCum[i]);
+        btcCore[i]=drTrend*Math.exp(rr[i]+jumpCum[i]);
       }
+      btc[i]=btcCore[i]*disFac;                       // observed price converges to the model trend
       gEma[i]+=aG*(Math.log(Math.max(btc[i],1e-9)/Math.max(btcPrev,1e-9))/dt - gEma[i]);   // adaptive belief from REALIZED returns
       // --- policy / short rate (SOFR proxy): selectable model ---
       const r10was=r10[i];
@@ -662,13 +674,23 @@ function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
   const amp0=(prefParNow()+convertTotalNow())/(num('btcHeld')*num('btcSpot'));
-  const dev=(num('btcSpot')/powerLawFairValue(num('expn')||5.77)-1)*100;
   $('derived').innerHTML=
     `<span class="d">entry mNAV <b>${mnav0.toFixed(2)}×</b></span>`+
-    `<span class="d">amplification <b>${(amp0*100).toFixed(1)}%</b></span>`+
-    `<span class="d">BTC vs line <b>${dev>=0?'+':''}${dev.toFixed(0)}%</b></span>`;
+    `<span class="d">amplification <b>${(amp0*100).toFixed(1)}%</b></span>`;
+  updateSnapDerived();
 }
-['btcSpot','mstrPrice','shares','btcHeld','expn','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
+function updateSnapDerived(){
+  // today's fair BTC price: de-lagged 200-WMA (F0 = WMA * gT/(1-e^-gT), T=200wk, g=trailing realized CAGR)
+  const spot=num('btcSpot'), wma=num('wma200'), g=num('gTrail')/100;
+  let html='';
+  if(wma>0&&g>0&&isFinite(spot)){
+    const gT=g*200*7/365.25, F0=wma*gT/(1-Math.exp(-gT)), dev=(spot/F0-1)*100;
+    html=`<span class="d">fair BTC price (de-lagged 200-WMA) <b>$${Math.round(F0).toLocaleString()}</b></span>`+
+         `<span class="d">spot vs fair <b>${dev>=0?'+':''}${dev.toFixed(0)}%</b></span>`;
+  }
+  $('derivedSnap').innerHTML=html;
+}
+['btcSpot','wma200','gTrail','mstrPrice','shares','btcHeld','expn','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
 COMMA_FIELDS.forEach(id=>$(id).addEventListener('blur',()=>fmtField(id)));
 formatAll();          // apply thousands separators to the pre-filled values
 refreshFairValue();   // populate the derived readout on load
@@ -735,7 +757,7 @@ function drawHist(out,rp,med){
 $('run').addEventListener('click',()=>{
   const P={
     btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
-    wma200:num('wma200'), dimLagFactor:1.75,
+    wma200:num('wma200'), gTrail:num('gTrail')/100, anchorWma:$('anchorWma').checked, disHl:num('disHl'),
     btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
     sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
