@@ -20,7 +20,8 @@
   body{margin:0;background:var(--ink);color:var(--txt);font-family:var(--sans);
        line-height:1.45;-webkit-font-smoothing:antialiased;padding:18px;}
   .wrap{max-width:760px;margin:0 auto;}
-  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  @media(max-width:430px){.eyebrow{font-size:clamp(8px,2.7vw,11px);letter-spacing:.12em;}}
   h1{font-size:23px;margin:.25em 0 .15em;letter-spacing:-.01em;font-weight:650;}
   h1 .b{color:var(--btc)} h1 .m{color:var(--mstr)}
   .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px;}
