@@ -12,6 +12,10 @@
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
+  .seg{display:none;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px}
+  .seg button{background:var(--panel2);color:var(--muted);border:0;padding:8px 16px;font:inherit;font-size:13px;cursor:pointer}
+  .seg button.active{background:var(--panel);color:var(--txt);font-weight:600}
+  .seg button+button{border-left:1px solid var(--line)}
   *{box-sizing:border-box}
   body{margin:0;background:var(--ink);color:var(--txt);font-family:var(--sans);
        line-height:1.45;-webkit-font-smoothing:antialiased;padding:18px;}
@@ -20,7 +24,7 @@
   h1{font-size:23px;margin:.25em 0 .15em;letter-spacing:-.01em;font-weight:650;}
   h1 .b{color:var(--btc)} h1 .m{color:var(--mstr)}
   .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px;}
-  .verdict{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 20px;margin-bottom:18px;}
+  .verdict{background:var(--panel);border-radius:12px;padding:18px 18px 20px;margin-bottom:18px;}
   .verdict .vlabel{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
   .vhead{font-size:21px;font-weight:650;margin:.35em 0 .15em;}
   .vhead.good{color:var(--good)} .vhead.warn{color:var(--btc)} .vhead.idle{color:var(--muted)}
@@ -40,6 +44,35 @@
            color:var(--txt);font-family:var(--mono);font-size:14px;padding:8px 9px;}
   .f select{cursor:pointer;}
   .f input:focus,.f select:focus{outline:none;border-color:var(--mstr);}
+  /* decision-frame tiles */
+  .dfTitle{font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--mstr);font-weight:650;}
+  .dfSub{font-size:12px;color:var(--muted);margin:3px 0 14px;}
+  .dfTiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media(max-width:640px){.dfTiles{grid-template-columns:1fr;}}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 13px 14px;display:flex;flex-direction:column;}
+  .tile .thead{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+  .tile .num{flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:1px solid var(--mstr);color:var(--mstr);
+             font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;}
+  .tile .tname{font-size:13.5px;font-weight:650;color:var(--txt);}
+  .tile .thelp{font-size:11px;color:var(--muted);line-height:1.45;margin:0 0 10px;flex:1;}
+  .tile input,.tile select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+             color:var(--txt);font-family:var(--mono);font-size:15px;padding:9px 10px;}
+  .tile select{cursor:pointer;}
+  .tile input:focus,.tile select:focus{outline:none;border-color:var(--mstr);}
+  .tile .unit{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:5px;}
+  /* inputs & assumptions panel */
+  .iaTitle{font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--btc);font-weight:650;}
+  .panelCard details{margin:0;border-bottom:1px solid var(--line);}
+  .panelCard details:last-of-type{border-bottom:0;}
+  .panelCard summary{list-style:none;display:flex;align-items:center;gap:9px;padding:11px 2px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--txt);cursor:pointer;}
+  .panelCard summary::-webkit-details-marker{display:none;}
+  .panelCard summary::before{content:'';width:0;height:0;border-left:5px solid var(--btc);
+    border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s ease;}
+  .panelCard details[open]>summary::before{transform:rotate(90deg);}
+  .panelCard details[open]>summary{color:var(--btc);}
+  .panelCard summary:hover{color:var(--btc);}
+  .panelCard details>.grid{padding:4px 2px 16px 14px;}
   .derived{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;margin-top:4px;}
   .derived .d{color:var(--muted);} .derived .d b{color:var(--txt);font-weight:600;}
   details{margin-top:2px;} summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
@@ -53,6 +86,8 @@
   .stat .k{font-size:11px;color:var(--muted);} .stat .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:2px;}
   .stat .v.pos{color:var(--good)} .stat .v.neg{color:var(--btc)}
   canvas{width:100%;height:210px;display:block;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);}
+  .panelCard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;margin-top:16px;}
+  .panelCard>.seclabel{margin-bottom:12px;}
   .foot{color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:14px;}
   .pill{font-family:var(--mono);font-size:10.5px;color:var(--btc);border:1px solid var(--line);border-radius:5px;padding:1px 6px;}
 </style>
@@ -61,21 +96,37 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
-  <p class="sub"><b>Rational mNAV — valuing the wrapper in Bitcoin terms against the self-custody hurdle.</b> Holding your own coins is the benchmark: one BTC stays one BTC, a 0% Bitcoin-denominated return. The tool asks whether owning MSTR beats that, after a counterparty-risk hurdle — an annual rate that compounds over your horizon and that the equity must clear in Bitcoin terms. <b style="color:var(--mstr)">Your job is to set the horizon, the hurdle, and your Bitcoin price model.</b> The tool runs a single Monte Carlo over the Bitcoin price (four models to choose from) and the policy rate, propagating Strategy's full capital structure with the Bitcoin Per Share of Common Stock (BPS) and the common stock mNAV premium computed endogenously along every path. mNAV here is MSTR's equity market cap (share price × diluted shares) over the dollar value of its Bitcoin. The results also report two capital-structure views of that same fair value — the <b>enterprise mNAV</b> (the whole capital stack, equity plus preferreds and convertibles net of the cash reserve, over gross Bitcoin) and the <b>net-assets mNAV</b> (equity over the Bitcoin backing that remains after those senior claims). The assumptions fields are pre-filled with a snapshot you can edit to match current values.</p>
 
-  <section>
-    <div class="seclabel">Your decision frame</div>
-    <div class="grid">
-      <div class="f"><label>Holding horizon (years)</label><input id="horizon" value="10"></div>
-      <div class="f"><label>Counterparty risk hurdle vs self-custody (%/yr, compounded over horizon; may be negative)</label><input id="rp" value="3.5"></div>
+  <section class="panelCard">
+    <div class="dfTitle">Your Decision Frame</div>
+    <div class="dfSub">Three beliefs drive everything below. Set them to match your own view — the tool converts them into the valuation they imply.</div>
+    <div class="dfTiles">
+      <div class="tile">
+        <div class="thead"><span class="num">1</span><span class="tname">Holding horizon</span></div>
+        <div class="thelp">How many years you'd hold MSTR before switching back to self-custody. With the optimizer on, the tool also finds the best exit τ* and shows both.</div>
+        <input id="horizon" value="10">
+        <div class="unit">years</div>
+      </div>
+      <div class="tile">
+        <div class="thead"><span class="num">2</span><span class="tname">Wrapper-risk hurdle</span></div>
+        <div class="thelp">The annual premium you demand for bearing counterparty &amp; wrapper risk instead of holding your own keys. Compounds over the horizon; may be negative.</div>
+        <input id="rp" value="3.5">
+        <div class="unit">%/yr vs self-custody</div>
+      </div>
+      <div class="tile">
+        <div class="thead"><span class="num">3</span><span class="tname">Bitcoin price model</span></div>
+        <div class="thelp">The growth path every valuation is conditioned on — your belief about Bitcoin, not a forecast. Trends compound from the 200-WMA fair-value anchor.</div>
+        <select id="btcModel"><option value="gbm">GBM — flat 10%/yr</option><option value="dr1">Diminishing Returns 20&#8594;10% / 20 yrs</option><option value="dr2">Diminishing Returns 30&#8594;15% / 20 yrs</option><option value="dr3" selected>Diminishing Returns 40&#8594;20% / 20 yrs</option></select>
+        <div class="unit">median CAGR profile</div>
+      </div>
     </div>
-    <div class="grid">
-      <div class="f"><label>Your Bitcoin price model</label><select id="btcModel"><option value="gbm">GBM — flat 10%/yr</option><option value="dr1">Diminishing Returns 20&#8594;10% / 20 yrs</option><option value="dr2">Diminishing Returns 30&#8594;15% / 20 yrs</option><option value="dr3" selected>Diminishing Returns 40&#8594;20% / 20 yrs</option></select></div>
-      <div class="f"><label>Volatility regime</label>
-        <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:11.5px;color:var(--muted)"><input type="checkbox" id="stochVol" checked style="width:auto"> stochastic volatility (auto-calibrated regimes)</label></div>
-    </div>
+  </section>
+
+  <section class="panelCard">
+    <div class="iaTitle">Inputs &amp; Assumptions</div>
+    <div class="dfSub">The market snapshot, Strategy's balance sheet, and the model machinery — organized by theme. Prefilled with a recent snapshot; every value is editable.</div>
     <details>
-      <summary>Market snapshot ▾</summary>
+      <summary>Market snapshot</summary>
       <div class="grid">
         <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="61500"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="61000"></div>
@@ -87,7 +138,7 @@
       </div>
     </details>
     <details>
-      <summary>Strategy balance sheet ▾</summary>
+      <summary>Strategy balance sheet</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
         <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="2550000000"></div>
@@ -112,26 +163,15 @@
       </div>
       <div class="derived" id="derived"></div>
     </details>
-    <details>
-      <summary>Model parameters ▾</summary>
+        <details>
+      <summary>BTC Assumptions</summary>
       <div class="grid" style="margin-top:10px">
+        <div class="f"><label>BTC volatility regime</label>
+        <label style="display:flex;align-items:center;gap:7px;margin-top:6px;font-size:11.5px;color:var(--muted)"><input type="checkbox" id="stochVol" checked style="width:auto"> stochastic volatility (auto-calibrated regimes)</label></div>
         <div class="f"><label>Accessible BTC supply (lost coins excluded)</label><input id="sAcc" value="17300000"></div>
-        <div class="f"><label>Power-law exponent n</label><input id="expn" value="5.77"></div>
         <div class="f"><label>BTC relative vol now σ (log)</label><input id="sigNow" value="0.50"></div>
         <div class="f"><label>Vol decay γ (σ∝age^−γ)</label><input id="volDecay" value="1.0"></div>
         <div class="f"><label>Corridor reversion speed θ (/yr)</label><input id="revert" value="0.50"></div>
-        <div class="f"><label>Amplification target</label><input id="ampTarget" value="0.45"></div>
-        <div class="f"><label>Amplification ceiling</label><input id="ampHigh" value="0.60"></div>
-        <div class="f"><label>Price impact: concentration coef k_perm</label><input id="kPerm" value="0.25"></div>
-        <div class="f"><label>Price impact: buy-size coef k_temp</label><input id="kTemp" value="2.0"></div>
-        <div class="f"><label>STRC carry margin (%/yr)</label><input id="carryMargin" value="0"></div>
-        <div class="f"><label>Reserve target — high (months of div)</label><input id="resHigh" value="24"></div>
-        <div class="f"><label>Reserve refill trigger (months)</label><input id="resLow" value="12"></div>
-        <div class="f"><label>Reserve op. floor (months)</label><input id="resFloorM" value="3"></div>
-        <div class="f"><label>Below-NAV ATM floor (mNAV)</label><input id="mnavAtmFloor" value="0.70"></div>
-        <div class="f"><label>Below-NAV ATM cap (% BTC val/qtr)</label><input id="maxCommonAtm" value="3"></div>
-        <div class="f"><label>Last-resort BTC sale (sell BTC to fund dividend before pausing)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="btcForcedSaleOn" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Last-resort BTC sale: max % of stack / qtr</label><input id="btcForcedSaleCapFrac" value="5"></div>
         <div class="f"><label>Anchor trend to 200-WMA fair value (de-lagged; spot converges to trend)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="anchorWma" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Dislocation half-life (yrs)</label><input id="disHl" value="1.25"></div>
         <div class="f"><label>GBM median CAGR (%/yr)</label><input id="gbmDrift" value="10"></div>
@@ -142,21 +182,69 @@
         <div class="f"><label>Joint fiscal shock (BTC re-rates w/ rate jump)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="jointShock" style="width:auto"> tie BTC to rate jumps</label></div>
         <div class="f"><label>BTC re-rating / shock (%, +=debasement)</label><input id="btcJumpMean" value="10"></div>
         <div class="f"><label>BTC re-rating std (%)</label><input id="btcJumpStd" value="15"></div>
-        <div class="f"><label>Accretive ATM (issue into strength, stack BTC)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="accretiveOn" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Accretive ATM: min mNAV to issue (capacity channel off)</label><input id="accretiveMnavMin" value="1.01"></div>
-        <div class="f"><label>Collateral-capacity ATM: common issuance at sub-1 mNAV unlocks STRC capacity</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="atmCollatChannel" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Accretive ATM hard floor (mNAV)</label><input id="atmAbsFloor" value="0.72"></div>
+      </div>
+    </details>
+    <details>
+      <summary>Bitcoin Yield Model</summary>
+      <div class="grid" style="margin-top:10px">
         <div class="f"><label>Market capitalization duration D (yrs of excess BY priced)</label><input id="byDur" value="2.0"></div>
         <div class="f"><label>Momentum kernel: upside slope &kappa;&#8314;</label><input id="byKappaUp" value="1.10"></div>
         <div class="f"><label>Momentum kernel: neutral forward BY (%/yr)</label><input id="byNeutral" value="15"></div>
         <div class="f"><label>Forward BY: weight on momentum</label><input id="byWMom" value="0.50"></div>
         <div class="f"><label>Entry BTC momentum (trailing EMA, %/yr)</label><input id="gEma0" value="-20"></div>
         <div class="f"><label>Entry trailing realized BY (%/yr)</label><input id="byEma0" value="21.5"></div>
+      </div>
+    </details>
+    <details>
+      <summary>Amplification Assumptions</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Countercyclical amplification (feasible estimator: target = base·e<sup>−x̂</sup>, x̂ from trailing WMA proxy)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="ampDyn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Amp target at fair value</label><input id="ampDynBase" value="0.33"></div>
+        <div class="f"><label>Amp floor (mania)</label><input id="ampDynLo" value="0.20"></div>
+        <div class="f"><label>Amp ceiling (bear bottom)</label><input id="ampDynHi" value="0.60"></div>
+        <div class="f"><label>Fractional-Kelly carry cap (0 = off)</label><input id="kellyFrac" value="0.50"></div>
+        <div class="f"><label>Static amplification target (if countercyclical off)</label><input id="ampTarget" value="0.45"></div>
+        <div class="f"><label>Absolute issuance ceiling</label><input id="ampHigh" value="0.75"></div>
+      </div>
+    </details>
+    <details>
+      <summary>Finite-Supply Brakes</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Price impact: concentration coef k_perm</label><input id="kPerm" value="1.25"></div>
+        <div class="f"><label>Price impact: buy-size coef k_temp</label><input id="kTemp" value="2.0"></div>
+        <div class="f"><label>Concentration pace exponent p_conc (buy flow ∝ remaining float^p)</label><input id="pConc" value="5.0"></div>
+        <div class="f"><label>STRC carry margin (%/yr)</label><input id="carryMargin" value="2"></div>
+      </div>
+    </details>
+    <details>
+      <summary>USD Reserve Assumptions</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Reserve target — high (months of div)</label><input id="resHigh" value="24"></div>
+        <div class="f"><label>Reserve refill trigger (months)</label><input id="resLow" value="12"></div>
+        <div class="f"><label>Reserve op. floor (months)</label><input id="resFloorM" value="3"></div>
+        <div class="f"><label>Last-resort BTC sale (sell BTC to fund dividend before pausing)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="btcForcedSaleOn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Last-resort BTC sale: max % of stack / qtr</label><input id="btcForcedSaleCapFrac" value="5"></div>
+      </div>
+    </details>
+    <details>
+      <summary>MSTR ATM Assumptions</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Below-NAV ATM floor (mNAV)</label><input id="mnavAtmFloor" value="0.70"></div>
+        <div class="f"><label>Below-NAV ATM cap (% BTC val/qtr)</label><input id="maxCommonAtm" value="3"></div>
+        <div class="f"><label>Accretive ATM (issue into strength, stack BTC)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="accretiveOn" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Accretive ATM: min mNAV to issue (capacity channel off)</label><input id="accretiveMnavMin" value="1.01"></div>
+        <div class="f"><label>Collateral-capacity ATM: common issuance at sub-1 mNAV unlocks STRC capacity</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="atmCollatChannel" checked style="width:auto"> enable</label></div>
+        <div class="f"><label>Accretive ATM hard floor (mNAV)</label><input id="atmAbsFloor" value="0.72"></div>
         <div class="f"><label>Accretive ATM: pace × premium (slope)</label><input id="accretiveSlope" value="0.10"></div>
         <div class="f"><label>Accretive ATM: max % BTC value / qtr</label><input id="accretiveCap" value="12"></div>
         <div class="f"><label>Discount buyback (sell BTC to retire shares below NAV)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="buybackOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Buyback: pace &times; discount (slope)</label><input id="buybackSlope" value="0.10"></div>
         <div class="f"><label>Buyback: max % BTC value / qtr</label><input id="buybackCap" value="5"></div>
+      </div>
+    </details>
+    <details>
+      <summary>Interest Rates</summary>
+      <div class="grid" style="margin-top:10px">
         <div class="f"><label>SOFR / policy-rate model</label><select id="rateModel"><option value="vasicek">Vasicek (mean-reverting)</option><option value="cir">CIR (√r vol, no neg)</option><option value="randomwalk">Random walk (driftless)</option><option value="jumpdiff" selected>Jump-diffusion (fiscal shocks)</option></select></div>
         <div class="f"><label>Constrained policy rate (lean against SOFR above threshold)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="repressionOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Constrained policy rate: threshold SOFR (%)</label><input id="repressionThreshold" value="4.5"></div>
@@ -168,6 +256,11 @@
         <div class="f"><label>Cap start year (if "after year N")</label><input id="yccStartYr" value="3"></div>
         <div class="f"><label>Cap breach level — SOFR trigger (%)</label><input id="yccBreach" value="6.0"></div>
         <div class="f"><label>SOFR–BTC shock correlation</label><input id="ust10Corr" value="0"></div>
+      </div>
+    </details>
+    <details>
+      <summary>STRC Assumptions</summary>
+      <div class="grid" style="margin-top:10px">
         <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="5.5"></div>
         <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="4.0"></div>
         <div class="f"><label>STRC spread × coverage sensitivity (%)</label><input id="strcCovSens" value="16"></div>
@@ -180,9 +273,14 @@
         <div class="f"><label>BTC-as-collateral regime (Basel)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="baselCollateralOn" style="width:auto"> enable</label></div>
         <div class="f"><label>Basel: effective from year</label><input id="baselYear" value="5"></div>
         <div class="f"><label>Basel: permanent spread tightening (%)</label><input id="baselTighten" value="1.5"></div>
-        <div class="f"><label>Shares ex-converts (basic+options+RSU)</label><input id="sharesExCv" value="373109017"></div>
         <div class="f"><label>Cumulative div fraction</label><input id="cumFrac" value="0.85"></div>
         <div class="f"><label>Arrears compound (%/yr)</label><input id="arrComp" value="10"></div>
+      </div>
+    </details>
+    <details>
+      <summary>Other</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="f"><label>Optimize holding horizon (find τ* before switching to self-custody)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="optHorizon" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Simulated paths</label><input id="paths" value="5000"></div>
       </div>
     </details>
@@ -190,20 +288,26 @@
 
   <button id="run">Run assessment</button>
 
-  <div class="verdict" id="verdict" style="margin-top:14px">
-    <div class="vlabel">Verdict</div>
-    <div class="vhead idle" id="vhead">Awaiting inputs</div>
-    <div class="vsub" id="vsub">Fill in the current state and run the assessment.</div>
-    <div class="scale"><div class="mstrfill" id="mstrfill" style="width:50%"></div><div class="btcfill" id="btcfill" style="width:50%"></div></div>
-    <div class="scalelegend"><span class="m" id="legm">MSTR —</span><span class="b" id="legb">— self-custody BTC</span></div>
-  </div>
-
   <section id="results" style="display:none;margin-top:14px">
-    <div class="seclabel">Result — MSTR return in BTC terms over <span id="rHorizon"></span> yr</div>
+    <div class="seg" id="viewToggle"><button id="tgUser">Your horizon</button><button id="tgOpt" class="active">Optimal exit</button></div>
+    <div class="verdict" id="verdict" style="margin-bottom:16px">
+      <div class="vlabel">Verdict</div>
+      <div class="vhead idle" id="vhead">Awaiting inputs</div>
+      <div class="vsub" id="vsub">Fill in the current state and run the assessment.</div>
+      <div class="scale"><div class="mstrfill" id="mstrfill" style="width:50%"></div><div class="btcfill" id="btcfill" style="width:50%"></div></div>
+      <div class="scalelegend"><span class="m" id="legm">MSTR —</span><span class="b" id="legb">— self-custody BTC</span></div>
+    </div>
+    <div class="seclabel">Probability Distribution of Outcomes — MSTR's annualized return, measured in Bitcoin, over a <span id="rHorizon"></span>-year hold</div>
     <canvas id="hist" width="720" height="210"></canvas>
     <div class="charthelp">Distribution of MSTR's <b>annual return measured in Bitcoin</b>, across all simulated paths. The white line is holding your own coins (0%); the red line is your hurdle. Bars to the right of the red line <b style="color:#5fd39b">clear the hurdle</b>; left of the white line they <b style="color:#c47a55">lose to simply holding BTC</b>.</div>
     <div class="charthelp" id="medlbl" style="margin-top:3px"></div>
     <div class="stats" id="statsGrid" style="margin-top:14px"></div>
+  </section>
+
+  <section id="optSection" style="display:none;margin-top:14px">
+    <div class="seclabel">Optimal Holding Horizon</div>
+    <canvas id="hcurve" width="720" height="200" style="width:100%;height:200px"></canvas>
+    <div class="charthelp" id="hcurvelbl">Your rational equity mNAV as a function of the holding horizon. The marked peak τ* is the optimal pre-committed exit — the year the wrapper's marginal excess return stops clearing your hurdle and self-custody takes over. A broad plateau means the exact year matters little.</div>
   </section>
 
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
@@ -222,9 +326,6 @@ function formatAll(){ COMMA_FIELDS.forEach(fmtField); }
 const GENESIS = new Date(Date.UTC(2009,0,3));
 const T0 = (Date.now() - GENESIS.getTime())/(365.25*24*3600*1000); // BTC age now, years
 
-// Porkopolis / Santostasi power-law fair value: Price = A_PL * days^n  (porkopolis.io: a=1.6e-17, b=5.77)
-const A_PL = 1.6e-17;
-function powerLawFairValue(n){ const days = T0*365.25; return A_PL*Math.pow(days, n); }
 function refreshFairValue(){
   updateDerived();
 }
@@ -272,8 +373,6 @@ const mnavOf=(price,dilutedShares,btcHeld,btcSpot)=>(price*dilutedShares)/(btcHe
 function runModel(P){
   spare=null;   // clean RNG state each run (the cached normal must not leak between Run clicks)
   const n=P.nPaths, dt=0.25, steps=Math.round(P.horizon*4);
-  const daysNow=T0*365.25, A=P.fairValue/Math.pow(daysNow,P.expn);
-  // Each model's own "today's fair value": power law from Santostasi line; diminishing & GBM from lag x 200WMA
   const DRP={dr1:[0.20,0.10],dr2:[0.30,0.15],dr3:[0.40,0.20]};   // DR variants: [c0, cinf], arithmetic CAGR
   const drC0=(DRP[P.btcModel]||[0,0])[0], drCinf=(DRP[P.btcModel]||[0,0])[1];
   const fairNow = P.btcSpot;   // all models compound from today's spot (no catch-up)
@@ -297,6 +396,11 @@ function runModel(P){
   let F0=P.btcSpot, d0=0;
   if(P.anchorWma&&P.wma200>0){ const gT=Math.max(P.gTrail,1e-6)*T_W; F0=P.wma200*gT/(1-Math.exp(-gT)); d0=Math.log(P.btcSpot/F0); }
   const kapDis=Math.LN2/Math.max(P.disHl,1e-6);
+  // feasible cycle/regime estimators (observables only), seeded from entry data
+  const kWma=1-Math.pow(0.5,dt/1.33), kGs=1-Math.pow(0.5,dt/2.0), kVol=1-Math.pow(0.5,dt/1.0), estLag=1.33/Math.LN2;
+  const lnpEma=new Float64Array(n).fill(Math.log(Math.max(P.wma200,1e-9)));
+  const gSlow=new Float64Array(n).fill(P.gTrail);
+  const varEma=new Float64Array(n).fill(0.25);
   const btc=new Float64Array(n).fill(P.btcSpot);      // observed price: always starts at spot
   const btcCore=new Float64Array(n).fill(F0);         // model process: starts at the de-lagged fair price
   const held=new Float64Array(n).fill(P.btcHeld);
@@ -333,6 +437,7 @@ function runModel(P){
   const gEma=new Float64Array(n).fill(P.gEma0);       // adaptive BTC-growth belief (realized-return EMA)
   const bpsPrev=new Float64Array(n).fill(P.btcHeld/Math.max(N0,1));
   const hLast=new Float64Array(n).fill(0.13);         // persisted structural hurdle (terminal mark)
+  const ckExit=P.recordCkpt?Array.from({length:Math.floor(steps/4)},()=>new Float64Array(n)):null;  // annual exit checkpoints
   const atmFracLag=new Float64Array(n).fill(0.5);     // lagged STRC duty cycle (capacity estimate input)
   const strcRetired=new Float64Array(n);              // cumulative STRC par retired (USD notional)
   const floorEffArr=new Float64Array(n).fill(P.accretiveMnavMin);  // entry-step effective ATM floor
@@ -342,12 +447,12 @@ function runModel(P){
   let drTrend=F0;   // deterministic DR trend, compounds from F0   // deterministic DR trend, compounds from F0 at the arithmetic CAGR
   for(let k=0;k<steps;k++){
     const tHeld=(k+1)*dt, calT=T0+tHeld, days=calT*365.25;
-    const fv=A*Math.pow(days,P.expn);
     const sigAnchor=P.sigNow*Math.pow(calT/T0,-P.volDecay);   // shared age-decaying vol for all three models
     const sq=Math.sqrt(dt);
     const cT=drCinf+(drC0-drCinf)*Math.exp(-P.dimDecay*tHeld);   // arithmetic CAGR at this step
     drTrend=drTrend*Math.pow(1+cT,dt);                            // DR trend compounding from F0
-    const disFac=Math.exp(d0*Math.exp(-kapDis*tHeld));            // spot->fair dislocation factor (decays to 1)
+    const disT=d0*Math.exp(-kapDis*tHeld);                        // spot->fair log-gap this step
+    const disFac=Math.exp(disT);                                  // dislocation factor (decays to 1)
     for(let i=0;i<n;i++){
       const zb=randn(), zi=randn();
       const zr=P.ust10Corr*zb+Math.sqrt(1-P.ust10Corr*P.ust10Corr)*zi;
@@ -371,6 +476,24 @@ function runModel(P){
         btcCore[i]=drTrend*Math.exp(rr[i]+jumpCum[i]);
       }
       btc[i]=btcCore[i]*disFac;                       // observed price converges to the model trend
+      // countercyclical amplification target from the FEASIBLE fair-line estimate (observables only)
+      let ampTgt=P.ampTarget;
+      if(P.ampDyn){
+        const stepret=Math.log(Math.max(btc[i],1e-9)/Math.max(btcPrev,1e-9));
+        gSlow[i]=(1-kGs)*gSlow[i]+kGs*(stepret/dt);
+        varEma[i]=(1-kVol)*varEma[i]+kVol*(stepret*stepret/dt);
+        const lnB=Math.log(Math.max(btc[i],1e-9));
+        lnpEma[i]=(1-kWma)*lnpEma[i]+kWma*lnB;
+        const x=lnB-(lnpEma[i]+gSlow[i]*estLag);
+        ampTgt=Math.min(Math.max(P.ampDynBase*Math.exp(-x),P.ampDynLo),P.ampDynHi);
+        if(P.kellyFrac>0){
+          const aK=P.kellyFrac*Math.max(gSlow[i]-cStrc[i],0)/Math.max(varEma[i],0.04);
+          ampTgt=Math.min(ampTgt,aK);   // regime-robust carry cap
+        }
+      }
+      // #2 CONCENTRATION brake: purchase pace scales with remaining float, ((1-θ)/(1-θ0))^pConc
+      const thNow=Math.min(held[i]/P.sAcc,0.999999);
+      const concMult=Math.pow(Math.max((1-thNow)/(1-theta0),0),P.pConc);
       gEma[i]+=aG*(Math.log(Math.max(btc[i],1e-9)/Math.max(btcPrev,1e-9))/dt - gEma[i]);   // adaptive belief from REALIZED returns
       // --- policy / short rate (SOFR proxy): selectable model ---
       const r10was=r10[i];
@@ -402,8 +525,8 @@ function runModel(P){
       const hS=r10[i]+Math.max(P.strcSpreadFloor+covAddP+volAddP-ratP-basP,P.strcSpreadMin);
       hLast[i]=hS;
       const carryEst=gEma[i]>(cStrc[i]+P.carryMargin);
-      const capQtrP=P.maxIssue*bv;
-      const roomP=Math.max(P.ampTarget*bv-(S[i]+D[i]),0);
+      const capQtrP=P.maxIssue*bv*concMult;
+      const roomP=Math.max(ampTgt*bv-(S[i]+D[i]),0);
       const byStrcP=carryEst?(atmFracLag[i]*Math.min(roomP,capQtrP)/Math.max(bv,1)):0;
       const uP=(P.atmCollatChannel?Math.min(Math.max(1-roomP/Math.max(capQtrP,1e-9),0),1)*(carryEst?1:0):0);
       const phiP=P.byNeutral+P.byKappaUp*Math.max(gEma[i]-P.byMomG0,0)-P.byKappaDn*Math.max(-gEma[i],0);
@@ -411,14 +534,14 @@ function runModel(P){
       for(let it=0;it<6;it++){
         let fA=0, atmBy=0;
         if(P.atmCollatChannel){
-          const pkg=(1+P.ampTarget*uP)*mnav-1;
-          if(pkg>0 && mnav>=P.atmAbsFloor){ fA=Math.min(P.accretiveSlope*pkg,P.accretiveCap); atmBy=fA*Math.max(pkg,0)/Math.max(mnav,1e-9); }
-        } else if(mnav>=P.accretiveMnavMin){ fA=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap); atmBy=fA*Math.max(mnav-1,0); }
+          const pkg=(1+ampTgt*uP)*mnav-1;
+          if(pkg>0 && mnav>=P.atmAbsFloor){ fA=Math.min(P.accretiveSlope*pkg,P.accretiveCap)*concMult; atmBy=fA*Math.max(pkg,0)/Math.max(mnav,1e-9); }
+        } else if(mnav>=P.accretiveMnavMin){ fA=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap)*concMult; atmBy=fA*Math.max(mnav-1,0); }
         const byStep=atmBy+byStrcP;
         const byFwd=P.byWReal*byEma[i]+P.byWMom*phiP+P.byWCap*(byStep/dt);
         mnav=0.5*mnav+0.5*Math.max(netRatio+(byFwd-hS)*P.byDur,P.mnavFloor);
       }
-      if(k===0) floorEffArr[i]=P.atmCollatChannel?Math.max(1/(1+P.ampTarget*uP),P.atmAbsFloor):P.accretiveMnavMin;
+      if(k===0) floorEffArr[i]=P.atmCollatChannel?Math.max(1/(1+ampTgt*uP),P.atmAbsFloor):P.accretiveMnavMin;
       if(recordPath) pcol[i]=mnav;
       const price=mnav*bv/Math.max(N[i],1);
 
@@ -426,9 +549,9 @@ function runModel(P){
       let doAtm=false, fracAtm=0;
       if(P.accretiveOn && btc[i]>btcRef[i] && !paused[i]){
         if(P.atmCollatChannel){
-          const pkgA=(1+P.ampTarget*uP)*mnav-1;                          // packaged gross-BY accretion per $
-          if(pkgA>0 && mnav>=P.atmAbsFloor){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*pkgA,P.accretiveCap); }
-        } else if(mnav>=P.accretiveMnavMin){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap); }
+          const pkgA=(1+ampTgt*uP)*mnav-1;                          // packaged gross-BY accretion per $
+          if(pkgA>0 && mnav>=P.atmAbsFloor){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*pkgA,P.accretiveCap)*concMult; }
+        } else if(mnav>=P.accretiveMnavMin){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap)*concMult; }
       }
       if(doAtm){
         const frac=fracAtm;
@@ -475,9 +598,9 @@ function runModel(P){
       if(!strcAvail) strcUnavail[i]=1;
       if(k>=strcBurn){ if(strcPrice>=97)strcTight[i]++; if(strcPrice>=90)strcWide[i]++; strcOpen[i]+=atmFrac; }  // time STRC trades above $97 / above $90 (par is $100, price-capped near $100.3)
 
-      const desired=P.ampTarget*bv;
+      const desired=ampTgt*bv;
       const room=Math.max(desired-(S[i]+D[i]),0);
-      const cap=P.maxIssue*bv;
+      const cap=P.maxIssue*bv*concMult;
       // #3 carry closure: proactive STRC-funded accumulation only while BTC forward growth clears the STRC coupon.
       const carryOpen = gEma[i] > cStrc[i] + P.carryMargin;   // ADAPTIVE: the firm believes realized returns
       if(!paused[i] && carryOpen){ const iss=atmFrac*Math.min(room,cap); S[i]+=iss; const coins=iss/execPx(iss,held[i],btc[i],P); held[i]+=coins; btcFromStrc[i]+=coins; }
@@ -531,10 +654,10 @@ function runModel(P){
       // === UNIFIED THRESHOLD: buy back exactly when the mNAV sits BELOW the effective accretive-ATM floor
       //     (the packaged-accretion boundary incl. the collateral-capacity unlock). Issue above the floor, buy
       //     back below it -- the two common-equity operations are mutually exclusive and can never fight. ===
-      const roomBb=Math.max(P.ampTarget*held[i]*btc[i]-(S[i]+D[i]),0);
-      const paceBb=P.maxIssue*held[i]*btc[i];
+      const roomBb=Math.max(ampTgt*held[i]*btc[i]-(S[i]+D[i]),0);
+      const paceBb=P.maxIssue*held[i]*btc[i]*concMult;
       const uBb=Math.min(Math.max(1-roomBb/Math.max(paceBb,1e-9),0),1)*(carryOpen?1:0);
-      const bbFloor=P.atmCollatChannel?Math.max(1/(1+P.ampTarget*uBb),P.atmAbsFloor):P.accretiveMnavMin;
+      const bbFloor=P.atmCollatChannel?Math.max(1/(1+ampTgt*uBb),P.atmAbsFloor):P.accretiveMnavMin;
       if(P.buybackOn && mnav<bbFloor && !pauseNow && !divForcedSale[i] && R[i]>=Rlow){
         const bvBb=held[i]*btc[i], fracb=Math.min(P.buybackSlope*(1-mnav),P.buybackCap);
         const priceBb=mnav*bvBb/Math.max(N[i],1);
@@ -604,6 +727,13 @@ function runModel(P){
           D[i]-=Pr; convActive[j][i]=0;                        // tranche resolved
         }
       }
+      if(P.recordCkpt && ((k+1)%4===0)){
+        // annual checkpoint: mark end-of-step state as if it were the exit (identical to a dedicated run)
+        const bvC=held[i]*btc[i], nrC=(bvC-(S[i]+arr[i]+D[i])+R[i])/Math.max(bvC,1);
+        const phiC=P.byNeutral+P.byKappaUp*Math.max(gEma[i]-P.byMomG0,0)-P.byKappaDn*Math.max(-gEma[i],0);
+        const mnavC=Math.max(nrC+(P.byWReal*byEma[i]+P.byWMom*phiC-hLast[i])*P.byDur,P.mnavFloor);
+        ckExit[((k+1)>>2)-1][i]=(held[i]/Math.max(N[i],1))*mnavC;
+      }
     }
     if(recordPath){ const c=Float64Array.from(pcol).sort(); premiumPath[k]=c[n>>1]; }
   }
@@ -659,6 +789,7 @@ function runModel(P){
           strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, btcSoldBbMed, bpsExitMed, stackExitMed, thetaExitMed, sharesExitMed,
           bpsEntry:P.btcHeld/Math.max(P.shares,1),
           strcRetiredMed:pctl(Float64Array.from(strcRetired).map(v=>v/Math.max(P.prefPar,1)).sort(),0.5),
+          ckExit, entryCost,
           SExitMed:pctl(Float64Array.from(SExit).sort(),0.5), DExitMed:pctl(Float64Array.from(DExit).sort(),0.5),
           arrExitMed:pctl(Float64Array.from(arrExit).sort(),0.5), RExitMed:pctl(Float64Array.from(RExit).sort(),0.5),
           bvExitMed:pctl(Float64Array.from(bvExit).sort(),0.5), cvShExitMed:pctl(Float64Array.from(cvShExit).sort(),0.5),
@@ -689,11 +820,83 @@ function updateSnapDerived(){
   }
   $('derivedSnap').innerHTML=html;
 }
-['btcSpot','wma200','gTrail','mstrPrice','shares','btcHeld','expn','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
+['btcSpot','wma200','gTrail','mstrPrice','shares','btcHeld','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
 COMMA_FIELDS.forEach(id=>$(id).addEventListener('blur',()=>fmtField(id)));
 formatAll();          // apply thousands separators to the pre-filled values
 refreshFairValue();   // populate the derived readout on load
 
+function drawCurve(curve,tauStar){
+  const c=$('hcurve'), dpr=window.devicePixelRatio||1;
+  const cssW=c.clientWidth||720, cssH=200;
+  c.width=cssW*dpr; c.height=cssH*dpr;
+  const ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+  const L=58,Rp=16,T=16,B=42,W=cssW-L-Rp,H=cssH-T-B;
+  const tmax=curve[curve.length-1].tau;
+  const ys=curve.map(p=>p.ym), peak=Math.max(...ys);
+  let ymin=Math.min(Math.min(...ys),1), ymax=Math.max(peak,1);
+  const pad=(ymax-ymin)*0.12; ymin-=pad; ymax+=pad;
+  const X=t=>L+W*(t-1)/(tmax-1), Y=v=>T+H*(1-(v-ymin)/(ymax-ymin));
+  // y ticks at nice steps
+  const span=ymax-ymin, step=span>1.2?0.25:(span>0.6?0.2:0.1);
+  ctx.font='10.5px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let v=Math.ceil(ymin/step)*step; v<=ymax+1e-9; v+=step){
+    const y=Y(v);
+    ctx.strokeStyle='rgba(138,143,154,0.16)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+W,y); ctx.stroke();
+    ctx.fillStyle='#8a8f9a'; ctx.fillText(v.toFixed(2)+'\u00d7',L-7,y);
+  }
+  // x ticks + light verticals
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(const t of [1,5,10,15,20,25,30]){
+    if(t>tmax) continue;
+    const x=X(t);
+    ctx.strokeStyle='rgba(138,143,154,0.10)';
+    ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,T+H); ctx.stroke();
+    ctx.strokeStyle='#5a5f6a'; ctx.beginPath(); ctx.moveTo(x,T+H); ctx.lineTo(x,T+H+4); ctx.stroke();
+    ctx.fillStyle='#8a8f9a'; ctx.fillText(String(t),x,T+H+7);
+  }
+  // plateau band: horizons within 1% of the peak
+  const inPl=curve.filter(p=>p.ym>=0.99*peak);
+  if(inPl.length>1){
+    const x0=X(inPl[0].tau), x1=X(inPl[inPl.length-1].tau);
+    ctx.fillStyle='rgba(232,180,90,0.10)';
+    ctx.fillRect(x0,T,x1-x0,H);
+  }
+  // parity line
+  if(1>=ymin&&1<=ymax){
+    ctx.strokeStyle='#8a8f9a'; ctx.setLineDash([5,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,Y(1)); ctx.lineTo(L+W,Y(1)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#8a8f9a'; ctx.font='10px system-ui'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('NAV parity (1.00\u00d7)',L+6,Y(1)-2);
+  }
+  // area fill under the curve
+  const grad=ctx.createLinearGradient(0,T,0,T+H);
+  grad.addColorStop(0,'rgba(95,211,155,0.22)'); grad.addColorStop(1,'rgba(95,211,155,0.02)');
+  ctx.fillStyle=grad; ctx.beginPath();
+  ctx.moveTo(X(curve[0].tau),T+H);
+  curve.forEach(p=>ctx.lineTo(X(p.tau),Y(p.ym)));
+  ctx.lineTo(X(curve[curve.length-1].tau),T+H); ctx.closePath(); ctx.fill();
+  // the curve itself
+  ctx.strokeStyle='#5fd39b'; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.beginPath();
+  curve.forEach((p,i)=>{ const x=X(p.tau),y=Y(p.ym); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke();
+  // tau* guide + marker + label
+  const ps=curve.find(p=>p.tau===tauStar);
+  ctx.strokeStyle='rgba(232,180,90,0.55)'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(X(ps.tau),T+H); ctx.lineTo(X(ps.tau),Y(ps.ym)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#e8b45a'; ctx.beginPath(); ctx.arc(X(ps.tau),Y(ps.ym),4.5,0,7); ctx.fill();
+  ctx.strokeStyle='#1c1f26'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(X(ps.tau),Y(ps.ym),4.5,0,7); ctx.stroke();
+  ctx.fillStyle='#e8b45a'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('\u03c4* = '+tauStar+' yr \u00b7 '+ps.ym.toFixed(2)+'\u00d7',
+               Math.min(Math.max(X(ps.tau),L+66),L+W-66), Y(ps.ym)-9);
+  // axis titles
+  ctx.fillStyle='#aab0ba'; ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.fillText('Holding horizon (years)', L+W/2, cssH-8);
+  ctx.save(); ctx.translate(13,T+H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Your rational equity mNAV',0,0); ctx.restore();
+  // frame
+  ctx.strokeStyle='#3a3f4a'; ctx.lineWidth=1; ctx.strokeRect(L,T,W,H);
+}
 function drawHist(out,rp,med){
   const c=$('hist'), ctx=c.getContext('2d');
   const dpr=window.devicePixelRatio||1;
@@ -702,7 +905,7 @@ function drawHist(out,rp,med){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const W=cssW,H=cssH;
   ctx.clearRect(0,0,W,H);
-  const padL=10,padR=10,padT=30,padB=24;
+  const padL=26,padR=10,padT=30,padB=40;
   const x0=padL,y0=padT,plotW=W-padL-padR,plotH=H-padT-padB;
 
   // adaptive x-range: central 96% of outcomes, always include 0 and the hurdle, padded, rounded to 5%
@@ -746,25 +949,125 @@ function drawHist(out,rp,med){
 
   // x-axis ticks
   ctx.fillStyle='#74838F'; ctx.font='11px ui-monospace,monospace';
-  const tick=(v,al)=>{ ctx.textAlign=al; ctx.fillText((v>0?'+':'')+Math.round(v*100)+'%',xOf(v),H-7); };
+  const tick=(v,al)=>{ ctx.textAlign=al; ctx.fillText((v>0?'+':'')+Math.round(v*100)+'%',xOf(v),y0+plotH+14); };
   tick(lo,'left');
   if(cx0>x0+36 && cx0<x0+plotW-36) tick(0,'center');
   tick(hi,'right');
+  // axis titles
+  ctx.fillStyle='#8a95a1'; ctx.font='11px system-ui'; ctx.textAlign='center';
+  ctx.fillText('MSTR annualized return in Bitcoin terms (%/yr)', x0+plotW/2, H-6);
+  ctx.save(); ctx.translate(9,y0+plotH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Share of simulated paths',0,0); ctx.restore();
   ctx.textAlign='left';
 }
 
+let RM_VIEWS=null;
+function renderView(view){
+    const P=view.P, res=view.res;
+    res.mktEntry=res.justifiedEntry; res.mktExit=res.premiumPathT;
+    const out=res.out, rp=P.rp;
+    const sorted=Float64Array.from(out).sort();
+    const med=pctl(sorted,0.5);
+    let beatBefore=0,beatAfter=0; for(const v of out){ if(v>0)beatBefore++; if(v-rp>0)beatAfter++; }
+    beatBefore/=out.length; beatAfter/=out.length;
+    const medExcess=med-rp, p5=pctl(sorted,0.05), p95=pctl(sorted,0.95);
+
+    // verdict
+    const mstrWin=beatAfter, pct=Math.round(mstrWin*100);
+    $('mstrfill').style.width=(mstrWin*100)+'%'; $('btcfill').style.width=((1-mstrWin)*100)+'%';
+    $('legm').textContent=`MSTR ${pct}%`; $('legb').textContent=`${100-pct}% self-custody BTC`;
+    const vh=$('vhead'), vs=$('vsub');
+    if(mstrWin>=0.5){ vh.className='vhead good'; vh.textContent=`MSTR — superior on ${pct}% of paths`; }
+    else { vh.className='vhead warn'; vh.textContent=`Self-custody BTC — superior on ${100-pct}% of paths`; }
+    const fvMed=res.fairValueMed, fvMean=res.fairValueMean, pnow=res.priceNow;
+    const upside=(fvMed/pnow-1)*100, fvCol=fvMed>=pnow?'var(--good)':'var(--btc)';
+    vs.innerHTML=`<span style="font-size:15px">Model <b>MSTR fair value ≈ <span style="color:${fvCol}">$${fvMed.toFixed(0)}</span></b> `+
+      `vs. $${pnow.toFixed(0)} today → <b style="color:${fvCol}">${upside>=0?'+':''}${upside.toFixed(0)}% ${upside>=0?'undervalued':'overvalued'}</b> `+
+      `<span style="color:var(--muted)">(this is the <b>coin-flip price</b>: at it, MSTR beats self-custody BTC on exactly half of paths over ${P.horizon}y.)</span></span><br><br>`+
+      `Median MSTR return is <b>${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr</b> in BTC terms — `+
+      `${medExcess>=0?'<b style="color:var(--good)">+'+(medExcess*100).toFixed(1)+'%/yr above</b>':'<b style="color:var(--btc)">'+(medExcess*100).toFixed(1)+'%/yr below</b>'} your hurdle. `+
+      `Dividend pauses on ${(res.pPause*100).toFixed(0)}% of paths (recoverable); net backing turns negative on ${(res.pUnder*100).toFixed(1)}% (deep stress, not a wipeout). `+
+      `<b style="color:var(--btc)">Last-resort BTC sale to fund the dividend on ${(res.pSaleDiv*100).toFixed(0)}% of paths</b> (reserve exhausted, common ATM too dilutive, STRC ATM shut; median ${(res.soldDivMed*100).toFixed(0)}% of the stack liquidated). `+
+      `<b style="color:var(--btc)">Forced BTC sale at a convert put date on ${(res.pForced*100).toFixed(0)}% of paths</b> (avg ${(res.soldFrac*100).toFixed(2)}% of the stack). `;
+
+    // stats
+    const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
+    const fmtSats=x=>Math.round(x*1e8).toLocaleString()+' sats';
+    const fmtStack=x=> x>=1e6 ? (x/1e6).toFixed(2)+'M BTC' : Math.round(x/1e3).toLocaleString()+'K BTC';
+    const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
+    // Capital-structure reframings of the same fair value. Senior claims = preferred par + convert principal, net of cash.
+    const grossBTC0=P.btcHeld*P.btcSpot;
+    const senior0=P.prefPar+P.convertTotal-P.reserve;    // preferred par + convert principal, net of cash
+    const sSr=senior0/grossBTC0;                          // senior claims as a share of gross BTC value
+    // Enterprise/net-assets count the convertibles ONCE (as debt), so their equity leg uses the EX-CONVERT
+    // share count, not the assumed-diluted count (which already folds in the conversion shares).
+    const xcRatio=P.sharesExCv/P.shares;                 // ex-convert / diluted (derived)
+    const ratEqXc=rationalMnav*xcRatio;                  // rational equity mNAV, ex-convert leg
+    const entEqXc=res.mnav0*xcRatio;                     // entry   equity mNAV, ex-convert leg
+    const entMnav=ratEqXc+sSr;                           // rational enterprise mNAV: (ex-convert equity + senior) / gross BTC
+    const netMnav=(sSr<1)?ratEqXc/(1-sSr):Infinity;      // rational net-assets mNAV: ex-convert equity / BTC net of senior
+    const entryEnt=entEqXc+sSr;                          // entry enterprise mNAV (today)
+    const entryNet=(sSr<1)?entEqXc/(1-sSr):Infinity;     // entry net-assets mNAV (today)
+    // Exit reframings use the ACTUAL terminal capital structure (median components): senior = preferred par
+    // + arrears + remaining convert principal, net of the terminal reserve, over terminal gross BTC value; the
+    // equity leg strips only the conversion shares of tranches still unresolved at exit.
+    const seniorT=res.SExitMed+res.arrExitMed+res.DExitMed-res.RExitMed;
+    const sSrT=seniorT/Math.max(res.bvExitMed,1);
+    const xcRatioT=Math.max(res.sharesExitMed-res.cvShExitMed,1)/Math.max(res.sharesExitMed,1);
+    const exitEqXc=res.mktExit*xcRatioT;                 // exit equity mNAV, ex-convert leg (terminal basis)
+    const exitEnt=exitEqXc+sSrT;                         // exit enterprise mNAV (terminal capital structure)
+    const exitNet=(sSrT<1)?exitEqXc/(1-sSrT):Infinity;   // exit net-assets mNAV (terminal capital structure)
+    $('statsGrid').innerHTML=
+      cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
+      cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
+      cell('Your rational equity mNAV (today)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Your rational enterprise mNAV (today)',entMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Your rational net-assets mNAV (today)',(isFinite(netMnav)?netMnav.toFixed(2)+'×':'n/a'),rationalMnav>=res.mnav0?'pos':'neg')+
+      cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
+      cell('Entry equity mNAV (today)',res.mnav0.toFixed(2)+'×')+
+      cell('Exit equity mNAV',res.mktExit.toFixed(2)+'×',res.mktExit>=res.mnav0?'pos':'neg')+
+      cell('Entry enterprise mNAV (today)',entryEnt.toFixed(2)+'×')+
+      cell('Exit enterprise mNAV',exitEnt.toFixed(2)+'×',exitEnt>=entryEnt?'pos':'neg')+
+      cell('Entry net-assets mNAV (today)',(isFinite(entryNet)?entryNet.toFixed(2)+'×':'n/a'))+
+      cell('Exit net-assets mNAV',(isFinite(exitNet)?exitNet.toFixed(2)+'×':'n/a'),(isFinite(exitNet)&&isFinite(entryNet)&&exitNet>=entryNet)?'pos':'neg')+
+      cell('BPS at Entry',fmtSats(res.bpsEntry))+
+      cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
+      cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
+      cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
+      cell('BTC Sold to Buyback MSTR',fmtStack(res.btcSoldBbMed*P.btcHeld))+
+      cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%');
+    $('rHorizon').textContent=P.horizon;
+    $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
+    $('results').style.display='block';
+    drawHist(out,rp,med);
+}
+function setViewToggle(P,tauStar){
+  const t=$('viewToggle');
+  if(tauStar===null){ t.style.display='none'; return; }
+  t.style.display='inline-flex';
+  $('tgUser').textContent='Your horizon ('+P.horizon+' yr)';
+  $('tgOpt').textContent='Optimal exit (\u03c4* = '+tauStar+' yr)';
+  setViewActive('opt');
+}
+function setViewActive(which){
+  $('tgUser').classList.toggle('active',which==='user');
+  $('tgOpt').classList.toggle('active',which==='opt');
+}
+$('tgUser').addEventListener('click',()=>{ if(RM_VIEWS){ setViewActive('user'); renderView(RM_VIEWS.user); } });
+$('tgOpt').addEventListener('click',()=>{ if(RM_VIEWS&&RM_VIEWS.opt){ setViewActive('opt'); renderView(RM_VIEWS.opt); } });
+
 $('run').addEventListener('click',()=>{
   const P={
-    btcSpot:num('btcSpot'), fairValue:powerLawFairValue(num('expn')||5.77), mstrPrice:num('mstrPrice'), shares:num('shares'),
+    btcSpot:num('btcSpot'), mstrPrice:num('mstrPrice'), shares:num('shares'),
     wma200:num('wma200'), gTrail:num('gTrail')/100, anchorWma:$('anchorWma').checked, disHl:num('disHl'),
     btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
-    sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), carryMargin:num('carryMargin')/100,
+    sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
-    expn:num('expn'), sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
-    ampTarget:num('ampTarget'), ampHigh:num('ampHigh'), ampLow:0.30,
+    sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
+    ampTarget:num('ampTarget'), ampDyn:$('ampDyn').checked, ampDynBase:num('ampDynBase'), ampDynLo:num('ampDynLo'), ampDynHi:num('ampDynHi'), kellyFrac:num('kellyFrac'), ampHigh:num('ampHigh'), ampLow:0.30,
     sigRef:num('sigNow'),
     resHigh:num('resHigh'), resLow:num('resLow'), resFloorM:num('resFloorM'),
-    sharesExCv:num('sharesExCv'),
+    sharesExCv:num('shares')-CONVERT_META.reduce((a,m)=>a+num(m.id)*1e6/m.strike,0),   // derived: diluted − if-converted
     cumFrac:num('cumFrac'), arrComp:num('arrComp')/100,
     nPaths:Math.max(500,Math.min(20000,Math.round(num('paths')))),
     // --- endogenous BY-hurdle premium (momentum-calibrated) ---
@@ -806,83 +1109,28 @@ $('run').addEventListener('click',()=>{
     // SINGLE fully-endogenous pass: the premium is the momentum-calibrated BY-hurdle fixed point computed
     // inside the simulation. Your Bitcoin model drives BOTH the realized path and (through realized momentum
     // and yield) the premium the market grants along it.
-    const res=runModel(Object.assign({},P,{fairPass:true,recordPath:true}));
-    res.mktEntry=res.justifiedEntry; res.mktExit=res.premiumPathT;
-    const out=res.out, rp=P.rp;
-    const sorted=Float64Array.from(out).sort();
-    const med=pctl(sorted,0.5);
-    let beatBefore=0,beatAfter=0; for(const v of out){ if(v>0)beatBefore++; if(v-rp>0)beatAfter++; }
-    beatBefore/=out.length; beatAfter/=out.length;
-    const medExcess=med-rp, p5=pctl(sorted,0.05), p95=pctl(sorted,0.95);
-
-    // verdict
-    const mstrWin=beatAfter, pct=Math.round(mstrWin*100);
-    $('mstrfill').style.width=(mstrWin*100)+'%'; $('btcfill').style.width=((1-mstrWin)*100)+'%';
-    $('legm').textContent=`MSTR ${pct}%`; $('legb').textContent=`${100-pct}% self-custody BTC`;
-    const vh=$('vhead'), vs=$('vsub');
-    if(mstrWin>=0.5){ vh.className='vhead good'; vh.textContent=`MSTR — superior on ${pct}% of paths`; }
-    else { vh.className='vhead warn'; vh.textContent=`Self-custody BTC — superior on ${100-pct}% of paths`; }
-    const fvMed=res.fairValueMed, fvMean=res.fairValueMean, pnow=res.priceNow;
-    const upside=(fvMed/pnow-1)*100, fvCol=fvMed>=pnow?'var(--good)':'var(--btc)';
-    vs.innerHTML=`<span style="font-size:15px">Model <b>MSTR fair value ≈ <span style="color:${fvCol}">$${fvMed.toFixed(0)}</span></b> `+
-      `vs. $${pnow.toFixed(0)} today → <b style="color:${fvCol}">${upside>=0?'+':''}${upside.toFixed(0)}% ${upside>=0?'undervalued':'overvalued'}</b> `+
-      `<span style="color:var(--muted)">(this is the <b>coin-flip price</b>: at it, MSTR beats self-custody BTC on exactly half of paths over ${P.horizon}y.)</span></span><br><br>`+
-      `Median MSTR return is <b>${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr</b> in BTC terms — `+
-      `${medExcess>=0?'<b style="color:var(--good)">+'+(medExcess*100).toFixed(1)+'%/yr above</b>':'<b style="color:var(--btc)">'+(medExcess*100).toFixed(1)+'%/yr below</b>'} your hurdle. `+
-      `Dividend pauses on ${(res.pPause*100).toFixed(0)}% of paths (recoverable); net backing turns negative on ${(res.pUnder*100).toFixed(1)}% (deep stress, not a wipeout). `+
-      `<b style="color:var(--btc)">Last-resort BTC sale to fund the dividend on ${(res.pSaleDiv*100).toFixed(0)}% of paths</b> (reserve exhausted, common ATM too dilutive, STRC ATM shut; median ${(res.soldDivMed*100).toFixed(0)}% of the stack liquidated). `+
-      `<b style="color:var(--btc)">Forced BTC sale at a convert put date on ${(res.pForced*100).toFixed(0)}% of paths</b> (avg ${(res.soldFrac*100).toFixed(2)}% of the stack). `;
-
-    // stats
-    const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
-    const fmtSats=x=>Math.round(x*1e8).toLocaleString()+' sats';
-    const fmtStack=x=> x>=1e6 ? (x/1e6).toFixed(2)+'M BTC' : Math.round(x/1e3).toLocaleString()+'K BTC';
-    const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
-    // Capital-structure reframings of the same fair value. Senior claims = preferred par + convert principal, net of cash.
-    const grossBTC0=P.btcHeld*P.btcSpot;
-    const senior0=P.prefPar+P.convertTotal-P.reserve;    // preferred par + convert principal, net of cash
-    const sSr=senior0/grossBTC0;                          // senior claims as a share of gross BTC value
-    // Enterprise/net-assets count the convertibles ONCE (as debt), so their equity leg uses the EX-CONVERT
-    // share count, not the assumed-diluted count (which already folds in the conversion shares).
-    const xcRatio=num('sharesExCv')/P.shares;            // ex-convert / diluted
-    const ratEqXc=rationalMnav*xcRatio;                  // rational equity mNAV, ex-convert leg
-    const entEqXc=res.mnav0*xcRatio;                     // entry   equity mNAV, ex-convert leg
-    const entMnav=ratEqXc+sSr;                           // rational enterprise mNAV: (ex-convert equity + senior) / gross BTC
-    const netMnav=(sSr<1)?ratEqXc/(1-sSr):Infinity;      // rational net-assets mNAV: ex-convert equity / BTC net of senior
-    const entryEnt=entEqXc+sSr;                          // entry enterprise mNAV (today)
-    const entryNet=(sSr<1)?entEqXc/(1-sSr):Infinity;     // entry net-assets mNAV (today)
-    // Exit reframings use the ACTUAL terminal capital structure (median components): senior = preferred par
-    // + arrears + remaining convert principal, net of the terminal reserve, over terminal gross BTC value; the
-    // equity leg strips only the conversion shares of tranches still unresolved at exit.
-    const seniorT=res.SExitMed+res.arrExitMed+res.DExitMed-res.RExitMed;
-    const sSrT=seniorT/Math.max(res.bvExitMed,1);
-    const xcRatioT=Math.max(res.sharesExitMed-res.cvShExitMed,1)/Math.max(res.sharesExitMed,1);
-    const exitEqXc=res.mktExit*xcRatioT;                 // exit equity mNAV, ex-convert leg (terminal basis)
-    const exitEnt=exitEqXc+sSrT;                         // exit enterprise mNAV (terminal capital structure)
-    const exitNet=(sSrT<1)?exitEqXc/(1-sSrT):Infinity;   // exit net-assets mNAV (terminal capital structure)
-    $('statsGrid').innerHTML=
-      cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
-      cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
-      cell('Your rational equity mNAV (today)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational enterprise mNAV (today)',entMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational net-assets mNAV (today)',(isFinite(netMnav)?netMnav.toFixed(2)+'×':'n/a'),rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
-      cell('Entry equity mNAV (today)',res.mnav0.toFixed(2)+'×')+
-      cell('Exit equity mNAV',res.mktExit.toFixed(2)+'×',res.mktExit>=res.mnav0?'pos':'neg')+
-      cell('Entry enterprise mNAV (today)',entryEnt.toFixed(2)+'×')+
-      cell('Exit enterprise mNAV',exitEnt.toFixed(2)+'×',exitEnt>=entryEnt?'pos':'neg')+
-      cell('Entry net-assets mNAV (today)',(isFinite(entryNet)?entryNet.toFixed(2)+'×':'n/a'))+
-      cell('Exit net-assets mNAV',(isFinite(exitNet)?exitNet.toFixed(2)+'×':'n/a'),(isFinite(exitNet)&&isFinite(entryNet)&&exitNet>=entryNet)?'pos':'neg')+
-      cell('BPS at Entry',fmtSats(res.bpsEntry))+
-      cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
-      cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
-      cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
-      cell('BTC Sold to Buyback MSTR',fmtStack(res.btcSoldBbMed*P.btcHeld))+
-      cell('STRC ATM open (% of horizon)',(res.strcOpenAvg*100).toFixed(0)+'%');
-    $('rHorizon').textContent=P.horizon;
-    $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
-    $('results').style.display='block';
-    drawHist(out,rp,med);
+    // --- optimal-horizon pre-pass: one 30-yr horizon-blind run; every shorter horizon lives inside it ---
+    let hcurve=null, tauStar=null;
+    if($('optHorizon').checked){
+      const pre=runModel(Object.assign({},P,{horizon:30,recordCkpt:true}));
+      hcurve=pre.ckExit.map((ev,j)=>{
+        const tau=j+1, disc=Math.pow(1+P.rp,tau);
+        const s2=Float64Array.from(ev).sort();
+        const fv=P.btcSpot*pctl(s2,0.5)/disc;
+        return {tau, fv, ym:fv*P.shares/(P.btcHeld*P.btcSpot)};
+      });
+      tauStar=hcurve.reduce((a,b)=>b.ym>a.ym?b:a).tau;
+    }
+    const resU=runModel(Object.assign({},P,{fairPass:true,recordPath:true}));
+    RM_VIEWS={user:{P:Object.assign({},P),res:resU},opt:null};
+    if(tauStar!==null){
+      const Po=Object.assign({},P,{horizon:tauStar});
+      RM_VIEWS.opt={P:Po,res:runModel(Object.assign({},Po,{fairPass:true,recordPath:true}))};
+    }
+    setViewToggle(P,tauStar);
+    renderView(RM_VIEWS.opt||RM_VIEWS.user);
+    if(hcurve){ $('optSection').style.display='block'; drawCurve(hcurve,tauStar); }
+    else { $('optSection').style.display='none'; }
     $('run').textContent='Run assessment';
   },30);
 });
