@@ -129,6 +129,10 @@
     <div class="dfSub">The market snapshot, Strategy's balance sheet, and the model machinery — organized by theme. Prefilled with a recent snapshot; every value is editable.</div>
     <details>
       <summary>Market snapshot</summary>
+      <div style="margin:10px 0 4px">
+        <button id="fetchLive" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer">↻&nbsp; Fetch live BTC data (spot · 200-WMA · trailing CAGR)</button>
+        <span id="fetchStatus" style="margin-left:9px;font-size:12px;color:var(--muted)"></span>
+      </div>
       <div class="grid">
         <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="63500"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="61000"></div>
@@ -814,6 +818,38 @@ function runModel(P){
 
 function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=Math.ceil(i);
   return lo===hi?sorted[lo]:sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo); }
+
+async function fetchLiveBtc(){
+  const btn=$('fetchLive'), st=$('fetchStatus');
+  btn.disabled=true; st.textContent='Fetching from CoinGecko…';
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1400');
+    if(!r.ok) throw new Error('CoinGecko HTTP '+r.status);
+    const j=await r.json();
+    const px=j.prices;                       // [[ms,price],...] daily granularity for days>90
+    if(!px||px.length<1300) throw new Error('unexpected data shape ('+(px?px.length:0)+' points)');
+    const spot=px[px.length-1][1];
+    // 200-week MA of weekly closes: sample every 7th daily close, ending at the latest
+    const weekly=[];
+    for(let i=px.length-1;i>=0&&weekly.length<200;i-=7) weekly.push(px[i][1]);
+    if(weekly.length<200) throw new Error('insufficient history for 200 weekly closes');
+    const wma=weekly.reduce((a,b)=>a+b,0)/weekly.length;
+    // trailing realized CAGR over the same window (log form, matching the engine's de-lag)
+    const yrs=(px[px.length-1][0]-px[0][0])/(365.25*24*3600*1000);
+    const cagr=Math.log(spot/px[0][1])/yrs;
+    $('btcSpot').value=Math.round(spot);
+    $('wma200').value=Math.round(wma);
+    $('gTrail').value=(cagr*100).toFixed(1);
+    updateDerived();
+    st.textContent='Updated '+new Date().toLocaleString()+' — spot $'+Math.round(spot).toLocaleString()
+      +', 200-WMA $'+Math.round(wma).toLocaleString()+', trailing CAGR '+(cagr*100).toFixed(1)+'%/yr.';
+  }catch(err){
+    st.textContent='Fetch failed ('+(err&&err.message?err.message:err)+') — inputs unchanged; enter values manually.';
+  }finally{ btn.disabled=false; }
+}
+document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#fetchLive'):null; if(t) fetchLiveBtc(); });
+// auto-refresh the BTC inputs on page load; prefilled values remain as fallback if the fetch fails
+fetchLiveBtc();
 
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
