@@ -1063,15 +1063,18 @@ function makeShareImageInner(v){
   // ---- three rational mNAVs ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
   ctx.fillText('WHAT IT\'S WORTH TODAY, PER $ OF COIN VALUE — HELD FOR τ* = '+d.horizon+' YEARS',M,y+6); y+=18;
-  const boxes=[['EQUITY',d.ymEq],['ENTERPRISE',d.ymEv],['NET-ASSETS',d.ymNet]];
-  const BW=(W-2*M-2*18)/3, BH=118;
+  const boxes=[['EQUITY',d.ymEq,d.eq0],['ENTERPRISE',d.ymEv,d.ev0],['NET-ASSETS',d.ymNet,d.net0]];
+  const BW=(W-2*M-2*18)/3, BH=142;
   boxes.forEach((b,i2)=>{ const x=M+i2*(BW+18);
     ctx.fillStyle=C.panel2; roundRect(ctx,x,y,BW,BH,12); ctx.fill();
     ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,y,BW,BH,12); ctx.stroke();
     ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,monospace';
     ctx.fillText('RATIONAL '+b[0]+' mNAV',x+18,y+34);
     ctx.fillStyle=C.txt; ctx.font='650 40px ui-monospace,monospace';
-    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+92); });
+    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+88);
+    if(isFinite(b[1])&&isFinite(b[2])){ const dl=b[1]-b[2];
+      ctx.fillStyle=dl>=0?C.good:C.btc; ctx.font='600 15px ui-monospace,monospace';
+      ctx.fillText((dl>=0?'+':'')+dl.toFixed(2)+'× vs entry ('+b[2].toFixed(2)+'×)',x+18,y+120); } });
   y+=BH+34;
   // ---- distribution (full width, below the mNAVs) ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
@@ -1214,7 +1217,8 @@ function renderView(view){
       ymEq:rationalMnav, ymEv:entMnav, ymNet:netMnav,
       fair:res.fairValueMed, pnow:res.priceNow, upside:(res.fairValueMed/res.priceNow-1)*100,
       med, medExcess:med-rp, out, rp, horizon:P.horizon,
-      btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma};
+      btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma,
+      eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity};
 }
 function setViewToggle(P,tauStar){
   const t=$('viewToggle');
