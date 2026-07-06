@@ -1069,10 +1069,9 @@ function makeShareImageInner(v){
     ctx.fillStyle=C.panel2; roundRect(ctx,x,y,BW,BH,12); ctx.fill();
     ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,y,BW,BH,12); ctx.stroke();
     ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,monospace';
-    ctx.fillText('RATIONAL '+b[0],x+18,y+32);
-    ctx.fillText('mNAV',x+18,y+50);
+    ctx.fillText('RATIONAL '+b[0]+' mNAV',x+18,y+34);
     ctx.fillStyle=C.txt; ctx.font='650 40px ui-monospace,monospace';
-    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+98); });
+    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+92); });
   y+=BH+34;
   // ---- distribution (full width, below the mNAVs) ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
