@@ -97,6 +97,7 @@
 <div class="wrap">
   <div class="eyebrow">Rational mNAV · BTC-denominated Monte Carlo</div>
   <h1><span class="m">MSTR</span> ⇄ <span class="b">BTC</span> Decision Engine</h1>
+  <div style="font-size:12.5px;margin-top:2px"><a href="rationalmnav_brief.pdf" target="_blank" rel="noopener" style="color:var(--btc);text-decoration:none;border-bottom:1px solid var(--line)">New here? Read the 4-page brief on how this works&nbsp;→</a></div>
 
   <section class="panelCard">
     <div class="dfTitle">Your Decision Frame</div>
@@ -129,19 +130,19 @@
     <details>
       <summary>Market snapshot</summary>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="61500"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="63500"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="61000"></div>
         <div class="f"><label>BTC Trailing 200-wk realized CAGR (%/yr)</label><input id="gTrail" value="28"></div>
         <div class="derived" id="derivedSnap" style="flex-basis:100%"></div>
-        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="100.00"></div>
-        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="88.66"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="103.00"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="91.00"></div>
         <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="398721017"></div>
       </div>
     </details>
     <details>
       <summary>Strategy balance sheet</summary>
       <div class="grid">
-        <div class="f"><label>BTC held</label><input id="btcHeld" value="847363"></div>
+        <div class="f"><label>BTC held</label><input id="btcHeld" value="843775"></div>
         <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="2550000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
@@ -309,6 +310,17 @@
     <div class="seclabel">Optimal Holding Horizon</div>
     <canvas id="hcurve" width="720" height="200" style="width:100%;height:200px"></canvas>
     <div class="charthelp" id="hcurvelbl">Your rational equity mNAV as a function of the holding horizon. The marked peak τ* is the optimal pre-committed exit — the year the wrapper's marginal excess return stops clearing your hurdle and self-custody takes over. A broad plateau means the exact year matters little.</div>
+  </section>
+
+  <section id="sharePanel" class="panelCard" style="display:none">
+    <div class="seclabel">Share</div>
+    <div class="charthelp" style="margin-bottom:10px">Generates a snapshot image of this run — your beliefs, the verdict, the return distribution, and the three rational mNAVs that reflect the optimal holding horizon.</div>
+    <button id="shareBtn" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:inherit;font-size:12.5px;cursor:pointer">⬇&nbsp; Download share image (PNG)</button>
+    <span id="shareStatus" style="margin-left:10px;font-size:12px;color:var(--muted)"></span>
+    <div id="sharePreviewWrap" style="display:none;margin-top:12px">
+      <img id="sharePreview" style="width:100%;border:1px solid var(--line);border-radius:10px" alt="share image preview">
+      <div class="charthelp" style="margin-top:6px">Preview shown above. If the download didn't start (some embedded viewers block downloads), right-click or long-press the image and save it.</div>
+    </div>
   </section>
 
   <p class="foot" id="disclaimer" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
@@ -963,6 +975,120 @@ function drawHist(out,rp,med){
 }
 
 let RM_VIEWS=null;
+function shareStatus(msg){ const el=$('shareStatus'); if(el) el.textContent=msg; }
+function makeShareImage(){
+  const v=(RM_VIEWS&&(RM_VIEWS.opt||RM_VIEWS.user));
+  if(!v||!v.shareData){ shareStatus('Run the assessment first.'); return; }
+  shareStatus('Generating…');
+  try{ makeShareImageInner(v); }catch(err){ shareStatus('Failed: '+(err&&err.message?err.message:err)); }
+}
+function makeShareImageInner(v){
+  const d=v.shareData;
+  const modelLbl=$('btcModel').selectedOptions?$('btcModel').selectedOptions[0].textContent:$('btcModel').value;
+  const W=1200,H=675,SC=2;
+  const c=document.createElement('canvas'); c.width=W*SC; c.height=H*SC;
+  const ctx=c.getContext('2d'); ctx.scale(SC,SC);
+  const C={ink:'#0F141A',panel:'#161E27',panel2:'#121922',line:'#283643',txt:'#D6DEE7',
+           muted:'#74838F',btc:'#F7931A',mstr:'#46C7E6',good:'#57C98A',warn:'#E2725B'};
+  ctx.fillStyle=C.ink; ctx.fillRect(0,0,W,H);
+  // header
+  ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,Menlo,monospace';
+  ctx.fillText('RATIONAL mNAV · BTC-DENOMINATED MONTE CARLO',44,44);
+  ctx.font='650 30px system-ui'; 
+  ctx.fillStyle=C.mstr; ctx.fillText('MSTR',44,82);
+  const wM=ctx.measureText('MSTR').width;
+  ctx.fillStyle=C.txt; ctx.fillText(' ⇄ ',44+wM,82);
+  const wA=ctx.measureText(' ⇄ ').width;
+  ctx.fillStyle=C.btc; ctx.fillText('BTC',44+wM+wA,82);
+  const wB=ctx.measureText('BTC').width;
+  ctx.fillStyle=C.txt; ctx.fillText(' Decision Engine',44+wM+wA+wB,82);
+  ctx.fillStyle=C.muted; ctx.font='600 14px ui-monospace,monospace'; ctx.textAlign='right';
+  ctx.fillText('rationalmnav.com',W-44,44); ctx.textAlign='left';
+  // left column: beliefs + verdict + mNAVs
+  const LX=44, LW=470;
+  const beliefRow=(y,label,val)=>{ ctx.fillStyle=C.muted; ctx.font='11.5px ui-monospace,monospace';
+    ctx.fillText(label.toUpperCase(),LX,y); ctx.fillStyle=C.txt; ctx.font='600 17px system-ui';
+    ctx.fillText(val,LX,y+22); };
+  beliefRow(132,'BTC price model',modelLbl.trim());
+  beliefRow(188,'Wrapper-risk hurdle',(d.rp*100).toFixed(1).replace(/\.0$/,'')+'% / yr vs self-custody');
+  beliefRow(244,'Optimal holding horizon (τ*)',d.horizon+' years');
+  // verdict panel
+  const VY=292, VH2=118;
+  ctx.fillStyle=C.panel; roundRect(ctx,LX,VY,LW,VH2,12); ctx.fill();
+  ctx.fillStyle=C.muted; ctx.font='600 11px ui-monospace,monospace'; ctx.fillText('VERDICT',LX+18,VY+26);
+  ctx.fillStyle=d.vheadGood?C.good:C.warn; ctx.font='650 19px system-ui';
+  wrapText(ctx,d.vhead,LX+18,VY+52,LW-36,24);
+  ctx.fillStyle=C.muted; ctx.font='12.5px system-ui';
+  wrapText(ctx,d.vsub,LX+18,VY+78,LW-36,17);
+  // three mNAV boxes
+  const boxes=[['RATIONAL EQUITY mNAV',d.ymEq],['RATIONAL ENTERPRISE mNAV',d.ymEv],['RATIONAL NET-ASSETS mNAV',d.ymNet]];
+  const BW=(LW-2*12)/3, BY=VY+VH2+16, BH=92;
+  boxes.forEach((b,i)=>{ const x=LX+i*(BW+12);
+    ctx.fillStyle=C.panel2; roundRect(ctx,x,BY,BW,BH,10); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,BY,BW,BH,10); ctx.stroke();
+    ctx.fillStyle=C.muted; ctx.font='600 9.5px ui-monospace,monospace';
+    b[0].split(' ').reduce((y,w2,j,arr)=>{ if(j%2===0){ctx.fillText(arr.slice(j,j+2).join(' '),x+12,y); return y+13;} return y; },BY+22);
+    ctx.fillStyle=C.txt; ctx.font='650 26px ui-monospace,monospace';
+    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+12,BY+76); });
+  ctx.fillStyle=C.muted; ctx.font='11px system-ui';
+  ctx.fillText('what you should pay today, per $ of coin value, run to the optimal exit',LX,BY+BH+22);
+  // right column: distribution
+  const RX=560, RW=W-RX-44, RY=132, RH=380;
+  ctx.fillStyle=C.muted; ctx.font='600 11px ui-monospace,monospace';
+  ctx.fillText(('PROBABILITY DISTRIBUTION — ANNUALIZED RETURN IN BTC TERMS, '+d.horizon+'-YR HOLD'),RX,RY-10);
+  drawShareHist(ctx,RX,RY,RW,RH,d.out,d.rp,C);
+  // footer
+  ctx.fillStyle=C.muted; ctx.font='11px system-ui';
+  ctx.fillText('Model output under user-selected assumptions · not investment advice · '+new Date().toISOString().slice(0,10),44,H-28);
+  // download
+  // inline preview (works even where the environment blocks downloads)
+  const img=$('sharePreview'), wrap=$('sharePreviewWrap');
+  if(img&&wrap){ img.src=c.toDataURL('image/png'); wrap.style.display='block'; }
+  // download attempt
+  c.toBlob(b=>{ try{ const a=document.createElement('a');
+    a.href=URL.createObjectURL(b); a.download='rationalmnav_share_'+new Date().toISOString().slice(0,10)+'.png';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    shareStatus('Done — image below (and downloading, if your browser allows it).');
+  }catch(e){ shareStatus('Preview ready below — save it manually.'); } },'image/png');
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function wrapText(ctx,text,x,y,maxW,lh){ const words=String(text).split(' '); let line='';
+  for(const w2 of words){ const t=line?line+' '+w2:w2;
+    if(ctx.measureText(t).width>maxW&&line){ ctx.fillText(line,x,y); line=w2; y+=lh; } else line=t; }
+  if(line) ctx.fillText(line,x,y); return y; }
+function drawShareHist(ctx,X,Y,Wd,Ht,out,rp,C){
+  const s2=Float64Array.from(out).sort();
+  const lo=Math.max(s2[Math.floor(0.005*s2.length)],-1), hi=s2[Math.floor(0.995*s2.length)];
+  const NB=46, bins=new Array(NB).fill(0), rng=hi-lo||1;
+  for(const v of out){ let b=Math.floor((v-lo)/rng*NB); if(b<0)b=0; if(b>=NB)b=NB-1; bins[b]++; }
+  const mx=Math.max(...bins), plotH=Ht-46, baseY=Y+plotH;
+  const xOf=v=>X+ (v-lo)/rng*Wd;
+  for(let i=0;i<NB;i++){ const v0=lo+i*rng/NB, vc=v0+rng/NB/2;
+    const h=bins[i]/mx*(plotH-8), x=X+i*Wd/NB;
+    ctx.fillStyle=vc<0?C.warn:(vc<rp?'#9aa7b2':C.good);
+    ctx.globalAlpha=0.88; ctx.fillRect(x,baseY-h,Wd/NB-1.5,h); ctx.globalAlpha=1; }
+  // zero and hurdle lines
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.beginPath();
+  ctx.moveTo(xOf(0),Y); ctx.lineTo(xOf(0),baseY); ctx.stroke();
+  ctx.strokeStyle=C.warn; ctx.setLineDash([5,4]); ctx.beginPath();
+  ctx.moveTo(xOf(rp),Y); ctx.lineTo(xOf(rp),baseY); ctx.stroke(); ctx.setLineDash([]);
+  // zone percentages
+  let nL=0,nM=0,nB=0; for(const v of out){ if(v>=rp)nB++; else if(v>=0)nM++; else nL++; }
+  const pc=n=>Math.round(n/out.length*100);
+  ctx.font='600 14px ui-monospace,monospace'; ctx.textAlign='center';
+  if(pc(nL)>0){ ctx.fillStyle=C.warn; ctx.fillText(pc(nL)+'% lose to BTC',(X+xOf(0))/2,Y+18); }
+  ctx.fillStyle=C.good; ctx.fillText(pc(nB)+'% clear hurdle',(Math.max(xOf(rp),xOf(0))+X+Wd)/2,Y+18);
+  // ticks + axis labels
+  ctx.fillStyle=C.muted; ctx.font='12px ui-monospace,monospace';
+  ctx.textAlign='left'; ctx.fillText((lo>0?'+':'')+Math.round(lo*100)+'%',X,baseY+18);
+  ctx.textAlign='center'; if(xOf(0)>X+40&&xOf(0)<X+Wd-40) ctx.fillText('0%',xOf(0),baseY+18);
+  ctx.textAlign='right'; ctx.fillText('+'+Math.round(hi*100)+'%',X+Wd,baseY+18);
+  ctx.textAlign='center'; ctx.font='12px system-ui'; ctx.fillStyle=C.muted;
+  ctx.fillText('MSTR annualized return in Bitcoin terms (white = holding BTC · dashed = your hurdle)',X+Wd/2,baseY+40);
+  ctx.textAlign='left';
+}
+document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#shareBtn'):null; if(t) makeShareImage(); });
 function renderView(view){
     const P=view.P, res=view.res;
     res.mktEntry=res.justifiedEntry; res.mktExit=res.premiumPathT;
@@ -1041,6 +1167,9 @@ function renderView(view){
     $('medlbl').textContent=`Median path: ${(med*100>=0?'+':'')}${(med*100).toFixed(1)}%/yr in Bitcoin terms (the typical outcome).`;
     $('results').style.display='block';
     drawHist(out,rp,med);
+    view.shareData={vhead:$('vhead').textContent, vheadGood:$('vhead').className.includes('good'),
+      vsub:$('vsub').textContent, ymEq:rationalMnav, ymEv:entMnav, ymNet:netMnav,
+      fair:res.fairValueMed, pnow:res.priceNow, out, rp, horizon:P.horizon};
 }
 function setViewToggle(P,tauStar){
   const t=$('viewToggle');
@@ -1130,8 +1259,8 @@ $('run').addEventListener('click',()=>{
     }
     setViewToggle(P,tauStar);
     renderView(RM_VIEWS.opt||RM_VIEWS.user);
-    if(hcurve){ $('optSection').style.display='block'; drawCurve(hcurve,tauStar); }
-    else { $('optSection').style.display='none'; }
+    if(hcurve){ $('optSection').style.display='block'; $('sharePanel').style.display='block'; drawCurve(hcurve,tauStar); }
+    else { $('optSection').style.display='none'; $('sharePanel').style.display='none'; }
     $('run').textContent='Run assessment';
   },30);
 });
