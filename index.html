@@ -130,7 +130,7 @@
     <details>
       <summary>Market snapshot</summary>
       <div style="margin:10px 0 4px">
-        <button id="fetchLive" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer">↻&nbsp; Fetch live BTC data (spot · 200-WMA · trailing CAGR)</button>
+        <button id="fetchLive" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer">↻&nbsp; Refresh live BTC data (spot · 200-WMA · trailing CAGR)</button>
         <span id="fetchStatus" style="margin-left:9px;font-size:12px;color:var(--muted)"></span>
       </div>
       <div class="grid">
@@ -819,32 +819,51 @@ function runModel(P){
 function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=Math.ceil(i);
   return lo===hi?sorted[lo]:sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo); }
 
+// Live BTC data with a source chain (CoinGecko's free tier now caps history at 365 days, so it can't serve a 200-week MA).
+// 1) Kraken public API — keyless, CORS-enabled, native WEEKLY candles (interval=10080), up to 720 back.
+// 2) CryptoCompare histoday — keyless tier, 1400 daily closes, sampled weekly.
 async function fetchLiveBtc(){
   const btn=$('fetchLive'), st=$('fetchStatus');
-  btn.disabled=true; st.textContent='Fetching from CoinGecko…';
-  try{
-    const r=await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1400');
-    if(!r.ok) throw new Error('CoinGecko HTTP '+r.status);
-    const j=await r.json();
-    const px=j.prices;                       // [[ms,price],...] daily granularity for days>90
-    if(!px||px.length<1300) throw new Error('unexpected data shape ('+(px?px.length:0)+' points)');
-    const spot=px[px.length-1][1];
-    // 200-week MA of weekly closes: sample every 7th daily close, ending at the latest
-    const weekly=[];
-    for(let i=px.length-1;i>=0&&weekly.length<200;i-=7) weekly.push(px[i][1]);
-    if(weekly.length<200) throw new Error('insufficient history for 200 weekly closes');
-    const wma=weekly.reduce((a,b)=>a+b,0)/weekly.length;
-    // trailing realized CAGR over the same window (log form, matching the engine's de-lag)
-    const yrs=(px[px.length-1][0]-px[0][0])/(365.25*24*3600*1000);
-    const cagr=Math.log(spot/px[0][1])/yrs;
+  btn.disabled=true;
+  const apply=(spot,weeklyCloses,src)=>{     // weeklyCloses: oldest→newest, exactly 200, ending at (or near) now
+    const wma=weeklyCloses.reduce((a,b)=>a+b,0)/weeklyCloses.length;
+    const yrs=(weeklyCloses.length-1)*7/365.25;
+    const cagr=Math.log(spot/weeklyCloses[0])/yrs;
     $('btcSpot').value=Math.round(spot);
     $('wma200').value=Math.round(wma);
     $('gTrail').value=(cagr*100).toFixed(1);
     updateDerived();
-    st.textContent='Updated '+new Date().toLocaleString()+' — spot $'+Math.round(spot).toLocaleString()
+    st.textContent='Updated '+new Date().toLocaleString()+' via '+src+' — spot $'+Math.round(spot).toLocaleString()
       +', 200-WMA $'+Math.round(wma).toLocaleString()+', trailing CAGR '+(cagr*100).toFixed(1)+'%/yr.';
-  }catch(err){
-    st.textContent='Fetch failed ('+(err&&err.message?err.message:err)+') — inputs unchanged; enter values manually.';
+  };
+  try{
+    // --- source 1: Kraken weekly OHLC ---
+    st.textContent='Fetching (Kraken)…';
+    const r1=await fetch('https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=10080');
+    if(!r1.ok) throw new Error('Kraken HTTP '+r1.status);
+    const j1=await r1.json();
+    if(j1.error&&j1.error.length) throw new Error('Kraken: '+j1.error[0]);
+    const key=Object.keys(j1.result).find(k=>k!=='last');
+    const rows=j1.result[key];                          // ascending [time,open,high,low,close,...]
+    if(!rows||rows.length<200) throw new Error('Kraken: only '+(rows?rows.length:0)+' weekly candles');
+    const closes=rows.slice(-200).map(c=>parseFloat(c[4]));
+    apply(closes[closes.length-1],closes,'Kraken');
+  }catch(e1){
+    try{
+      // --- source 2: CryptoCompare daily, sampled weekly ---
+      st.textContent='Kraken unavailable ('+(e1&&e1.message?e1.message:e1)+') — trying CryptoCompare…';
+      const r2=await fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=1400');
+      if(!r2.ok) throw new Error('CryptoCompare HTTP '+r2.status);
+      const j2=await r2.json();
+      const d=j2&&j2.Data&&j2.Data.Data;
+      if(!d||d.length<1394) throw new Error('CryptoCompare: '+(d?d.length:0)+' points');
+      const weekly=[];
+      for(let i2=d.length-1;i2>=0&&weekly.length<200;i2-=7) weekly.unshift(d[i2].close);
+      if(weekly.length<200) throw new Error('CryptoCompare: insufficient weekly samples');
+      apply(weekly[weekly.length-1],weekly,'CryptoCompare');
+    }catch(e2){
+      st.textContent='Live fetch failed ('+(e2&&e2.message?e2.message:e2)+') — inputs unchanged; prefilled values in use.';
+    }
   }finally{ btn.disabled=false; }
 }
 document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#fetchLive'):null; if(t) fetchLiveBtc(); });
