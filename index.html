@@ -870,23 +870,37 @@ async function fetchLiveBtc(){
 // Equity quotes (MSTR, STRC): exchanges license real-time data, so no keyless CORS-enabled API exists.
 // Best-effort: Yahoo Finance chart metadata (delayed ~15 min) reached through public CORS proxies, with the
 // prefilled values as the standing fallback. Users can always type over the inputs.
+// OPTIONAL RELIABILITY UPGRADE: paste a free Finnhub API key here (finnhub.io, ~2 min to register).
+// If set, equity quotes use Finnhub's CORS-enabled API directly and skip the public proxies entirely.
+const FINNHUB_KEY='';
 async function fetchQuote(sym){
-  const target='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
-  const proxies=[
-    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-    u=>'https://corsproxy.io/?url='+encodeURIComponent(u)
-  ];
-  let lastErr='no proxy reachable';
-  for(const wrap of proxies){
+  const yahoo='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
+  const stooq='https://stooq.com/q/l/?s='+sym.toLowerCase()+'.us&f=sd2t2ohlcv&h&e=csv';
+  const viaAllorigins=u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u);
+  const viaCodetabs=u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u);
+  const parseYahoo=async r=>{ const j=await r.json();
+    const m=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
+    return m&&(m.regularMarketPrice||m.previousClose); };
+  const parseStooq=async r=>{ const t=await r.text();
+    const rows=t.trim().split(/\r?\n/); if(rows.length<2) return null;
+    const v=parseFloat(rows[1].split(',')[6]); return isFinite(v)?v:null; };
+  const parseFinnhub=async r=>{ const j=await r.json(); return j&&j.c>0?j.c:null; };
+  const attempts=[];
+  if(FINNHUB_KEY) attempts.push(['Finnhub','https://finnhub.io/api/v1/quote?symbol='+sym+'&token='+FINNHUB_KEY,parseFinnhub]);
+  attempts.push(
+    ['Yahoo/codetabs',viaCodetabs(yahoo),parseYahoo],
+    ['Yahoo/allorigins',viaAllorigins(yahoo),parseYahoo],
+    ['Stooq/codetabs',viaCodetabs(stooq),parseStooq],
+    ['Stooq/allorigins',viaAllorigins(stooq),parseStooq]);
+  let lastErr='no source reachable';
+  for(const [name,url,parse] of attempts){
     try{
-      const r=await fetch(wrap(target));
-      if(!r.ok){ lastErr=sym+' HTTP '+r.status; continue; }
-      const j=await r.json();
-      const meta=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
-      const px=meta&&(meta.regularMarketPrice||meta.previousClose);
+      const r=await fetch(url);
+      if(!r.ok){ lastErr=name+' HTTP '+r.status; continue; }
+      const px=await parse(r);
       if(px&&isFinite(px)&&px>0) return px;
-      lastErr=sym+': no price in response';
-    }catch(e){ lastErr=sym+': '+(e&&e.message?e.message:e); }
+      lastErr=name+': no price in response';
+    }catch(e){ lastErr=name+': '+(e&&e.message?e.message:e); }
   }
   throw new Error(lastErr);
 }
