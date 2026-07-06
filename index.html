@@ -132,6 +132,7 @@
       <div style="margin:10px 0 4px">
         <button id="fetchLive" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer">↻&nbsp; Refresh live BTC data (spot · 200-WMA · trailing CAGR)</button>
         <span id="fetchStatus" style="margin-left:9px;font-size:12px;color:var(--muted)"></span>
+        <div id="quoteStatus" style="margin-top:5px;font-size:12px;color:var(--muted)"></div>
       </div>
       <div class="grid">
         <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="63500"></div>
@@ -866,9 +867,44 @@ async function fetchLiveBtc(){
     }
   }finally{ btn.disabled=false; }
 }
-document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#fetchLive'):null; if(t) fetchLiveBtc(); });
-// auto-refresh the BTC inputs on page load; prefilled values remain as fallback if the fetch fails
+// Equity quotes (MSTR, STRC): exchanges license real-time data, so no keyless CORS-enabled API exists.
+// Best-effort: Yahoo Finance chart metadata (delayed ~15 min) reached through public CORS proxies, with the
+// prefilled values as the standing fallback. Users can always type over the inputs.
+async function fetchQuote(sym){
+  const target='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
+  const proxies=[
+    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+    u=>'https://corsproxy.io/?url='+encodeURIComponent(u)
+  ];
+  let lastErr='no proxy reachable';
+  for(const wrap of proxies){
+    try{
+      const r=await fetch(wrap(target));
+      if(!r.ok){ lastErr=sym+' HTTP '+r.status; continue; }
+      const j=await r.json();
+      const meta=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
+      const px=meta&&(meta.regularMarketPrice||meta.previousClose);
+      if(px&&isFinite(px)&&px>0) return px;
+      lastErr=sym+': no price in response';
+    }catch(e){ lastErr=sym+': '+(e&&e.message?e.message:e); }
+  }
+  throw new Error(lastErr);
+}
+async function fetchLiveQuotes(){
+  const qs=$('quoteStatus'); if(!qs) return;
+  qs.textContent='Fetching MSTR / STRC quotes…';
+  const out=[];
+  try{ const p=await fetchQuote('MSTR'); $('mstrPrice').value=p.toFixed(2); out.push('MSTR $'+p.toFixed(2)); }
+  catch(e){ out.push('MSTR: failed ('+e.message+'), prefill in use'); }
+  try{ const p=await fetchQuote('STRC'); $('strcPriceNow').value=p.toFixed(2); out.push('STRC $'+p.toFixed(2)); }
+  catch(e){ out.push('STRC: failed ('+e.message+'), prefill in use'); }
+  updateDerived();
+  qs.textContent='Quotes (delayed ~15 min): '+out.join(' · ');
+}
+document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#fetchLive'):null; if(t){ fetchLiveBtc(); fetchLiveQuotes(); } });
+// auto-refresh on page load; prefilled values remain as fallback if any fetch fails
 fetchLiveBtc();
+fetchLiveQuotes();
 
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
