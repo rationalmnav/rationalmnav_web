@@ -984,63 +984,104 @@ function makeShareImage(){
 }
 function makeShareImageInner(v){
   const d=v.shareData;
-  const modelLbl=$('btcModel').selectedOptions?$('btcModel').selectedOptions[0].textContent:$('btcModel').value;
-  const W=1200,H=675,SC=2;
+  const modelLbl=($('btcModel').selectedOptions?$('btcModel').selectedOptions[0].textContent:$('btcModel').value).trim();
+  const W=1080,H=1350,SC=2,M=56;                      // portrait 4:5 — legible on a phone without zooming
   const c=document.createElement('canvas'); c.width=W*SC; c.height=H*SC;
   const ctx=c.getContext('2d'); ctx.scale(SC,SC);
   const C={ink:'#0F141A',panel:'#161E27',panel2:'#121922',line:'#283643',txt:'#D6DEE7',
            muted:'#74838F',btc:'#F7931A',mstr:'#46C7E6',good:'#57C98A',warn:'#E2725B'};
   ctx.fillStyle=C.ink; ctx.fillRect(0,0,W,H);
-  // header
-  ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,Menlo,monospace';
-  ctx.fillText('RATIONAL mNAV · BTC-DENOMINATED MONTE CARLO',44,44);
-  ctx.font='650 30px system-ui'; 
-  ctx.fillStyle=C.mstr; ctx.fillText('MSTR',44,82);
-  const wM=ctx.measureText('MSTR').width;
-  ctx.fillStyle=C.txt; ctx.fillText(' ⇄ ',44+wM,82);
-  const wA=ctx.measureText(' ⇄ ').width;
-  ctx.fillStyle=C.btc; ctx.fillText('BTC',44+wM+wA,82);
-  const wB=ctx.measureText('BTC').width;
-  ctx.fillStyle=C.txt; ctx.fillText(' Decision Engine',44+wM+wA+wB,82);
-  ctx.fillStyle=C.muted; ctx.font='600 14px ui-monospace,monospace'; ctx.textAlign='right';
-  ctx.fillText('rationalmnav.com',W-44,44); ctx.textAlign='left';
-  // left column: beliefs + verdict + mNAVs
-  const LX=44, LW=470;
-  const beliefRow=(y,label,val)=>{ ctx.fillStyle=C.muted; ctx.font='11.5px ui-monospace,monospace';
-    ctx.fillText(label.toUpperCase(),LX,y); ctx.fillStyle=C.txt; ctx.font='600 17px system-ui';
-    ctx.fillText(val,LX,y+22); };
-  beliefRow(132,'BTC price model',modelLbl.trim());
-  beliefRow(188,'Wrapper-risk hurdle',(d.rp*100).toFixed(1).replace(/\.0$/,'')+'% / yr vs self-custody');
-  beliefRow(244,'Optimal holding horizon (τ*)',d.horizon+' years');
-  // verdict panel
-  const VY=292, VH2=118;
-  ctx.fillStyle=C.panel; roundRect(ctx,LX,VY,LW,VH2,12); ctx.fill();
-  ctx.fillStyle=C.muted; ctx.font='600 11px ui-monospace,monospace'; ctx.fillText('VERDICT',LX+18,VY+26);
-  ctx.fillStyle=d.vheadGood?C.good:C.warn; ctx.font='650 19px system-ui';
-  wrapText(ctx,d.vhead,LX+18,VY+52,LW-36,24);
-  ctx.fillStyle=C.muted; ctx.font='12.5px system-ui';
-  wrapText(ctx,d.vsub,LX+18,VY+78,LW-36,17);
-  // three mNAV boxes
-  const boxes=[['RATIONAL EQUITY mNAV',d.ymEq],['RATIONAL ENTERPRISE mNAV',d.ymEv],['RATIONAL NET-ASSETS mNAV',d.ymNet]];
-  const BW=(LW-2*12)/3, BY=VY+VH2+16, BH=92;
-  boxes.forEach((b,i)=>{ const x=LX+i*(BW+12);
-    ctx.fillStyle=C.panel2; roundRect(ctx,x,BY,BW,BH,10); ctx.fill();
-    ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,BY,BW,BH,10); ctx.stroke();
-    ctx.fillStyle=C.muted; ctx.font='600 9.5px ui-monospace,monospace';
-    b[0].split(' ').reduce((y,w2,j,arr)=>{ if(j%2===0){ctx.fillText(arr.slice(j,j+2).join(' '),x+12,y); return y+13;} return y; },BY+22);
-    ctx.fillStyle=C.txt; ctx.font='650 26px ui-monospace,monospace';
-    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+12,BY+76); });
-  ctx.fillStyle=C.muted; ctx.font='11px system-ui';
-  ctx.fillText('what you should pay today, per $ of coin value, run to the optimal exit',LX,BY+BH+22);
-  // right column: distribution
-  const RX=560, RW=W-RX-44, RY=132, RH=380;
-  ctx.fillStyle=C.muted; ctx.font='600 11px ui-monospace,monospace';
-  ctx.fillText(('PROBABILITY DISTRIBUTION — ANNUALIZED RETURN IN BTC TERMS, '+d.horizon+'-YR HOLD'),RX,RY-10);
-  drawShareHist(ctx,RX,RY,RW,RH,d.out,d.rp,C);
-  // footer
-  ctx.fillStyle=C.muted; ctx.font='11px system-ui';
-  ctx.fillText('Model output under user-selected assumptions · not investment advice · '+new Date().toISOString().slice(0,10),44,H-28);
-  // download
+  ctx.textBaseline='alphabetic';
+  // segment drawer with wrapping (word-level, per-segment color/bold)
+  function drawSegs(segs,x,y,maxW,lh,size,measureOnly){
+    let cx=x;
+    for(const sg of segs){ ctx.font=(sg.b?'650 ':'400 ')+size+'px system-ui';
+      for(const w2 of String(sg.t).split(' ')){ if(!w2) continue;
+        const ww=ctx.measureText(w2+' ').width;
+        if(cx+ww>x+maxW && cx>x){ cx=x; y+=lh; }
+        if(!measureOnly){ ctx.fillStyle=sg.c||C.txt; ctx.fillText(w2,cx,y); }
+        cx+=ww; } }
+    return y;
+  }
+  // ---- header ----
+  ctx.fillStyle=C.muted; ctx.font='600 17px ui-monospace,Menlo,monospace';
+  ctx.fillText('RATIONAL mNAV · BTC-DENOMINATED MONTE CARLO',M,62);
+  ctx.font='650 40px system-ui';
+  let hx=M;
+  ctx.fillStyle=C.mstr; ctx.fillText('MSTR',hx,112); hx+=ctx.measureText('MSTR').width;
+  ctx.fillStyle=C.txt;  ctx.fillText(' ⇄ ',hx,112);  hx+=ctx.measureText(' ⇄ ').width;
+  ctx.fillStyle=C.btc;  ctx.fillText('BTC',hx,112);  hx+=ctx.measureText('BTC').width;
+  ctx.fillStyle=C.txt;  ctx.fillText(' Decision Engine',hx,112);
+  // site badge, top right: pill with the brand orange, sized to advertise
+  ctx.font='650 24px ui-monospace,monospace';
+  const siteTxt='rationalmnav.com', stw=ctx.measureText(siteTxt).width;
+  const bx=W-M-stw-36, bY=40, bH=46;
+  ctx.fillStyle='rgba(247,147,26,0.12)'; roundRect(ctx,bx,bY,stw+36,bH,23); ctx.fill();
+  ctx.strokeStyle=C.btc; ctx.lineWidth=1.5; roundRect(ctx,bx,bY,stw+36,bH,23); ctx.stroke();
+  ctx.fillStyle=C.btc; ctx.textAlign='center';
+  ctx.fillText(siteTxt,bx+(stw+36)/2,bY+31); ctx.textAlign='left';
+  // ---- beliefs ----
+  let y=170, y2=170;
+  const beliefAt=(x,label,val,useY2)=>{ const yy=useY2?y2:y;
+    ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
+    ctx.fillText(label.toUpperCase(),x,yy);
+    ctx.fillStyle=C.txt; ctx.font='650 24px system-ui'; ctx.fillText(val,x,yy+30);
+    if(useY2) y2+=68; else y+=68; };
+  beliefAt(M,'BTC price model',modelLbl,false);
+  beliefAt(M,'Wrapper-risk hurdle',(d.rp*100).toFixed(1).replace(/\.0$/,'')+'% / yr vs self-custody',false);
+  beliefAt(M,'Optimal holding horizon (τ*)',d.horizon+' years',false);
+  // right column: the market snapshot driving the fair-value anchor
+  const RXC=W/2+40, fmt$=v=>'$'+Math.round(v).toLocaleString('en-US');
+  let fairBtc=d.btcSpot;
+  if(d.anchorWma&&d.wma200>0){ const gT=Math.max(d.gTrail,1e-6)*(200*7/365.25); fairBtc=d.wma200*gT/(1-Math.exp(-gT)); }
+  const gapPct=(d.btcSpot/fairBtc-1)*100;
+  beliefAt(RXC,'BTC spot price',fmt$(d.btcSpot),true);
+  beliefAt(RXC,'BTC 200-week moving average',fmt$(d.wma200),true);
+  beliefAt(RXC,'BTC fair price (de-lagged WMA)',fmt$(fairBtc)+'  ('+(gapPct>=0?'+':'')+gapPct.toFixed(0)+'% spot vs fair)',true);
+  y=Math.max(y,y2)+4;
+  // ---- verdict panel (dynamic height, tool-matched colors) ----
+  const fvCol=d.fair>=d.pnow?C.good:C.btc;
+  const headSegs=[{t:d.vhead,c:d.vheadGood?C.good:C.warn,b:true}];
+  const subSegs=[
+    {t:'Model'},{t:'MSTR fair value ≈',b:true},{t:'$'+d.fair.toFixed(0),c:fvCol,b:true},
+    {t:'vs. $'+d.pnow.toFixed(0)+' today →'},
+    {t:(d.upside>=0?'+':'')+d.upside.toFixed(0)+'% '+(d.upside>=0?'undervalued':'overvalued'),c:fvCol,b:true},
+    {t:'· Median MSTR return'},{t:(d.med*100>=0?'+':'')+(d.med*100).toFixed(1)+'%/yr',b:true},
+    {t:'in BTC terms —'},
+    d.medExcess>=0?{t:'+'+(d.medExcess*100).toFixed(1)+'%/yr above',c:C.good,b:true}
+                  :{t:(d.medExcess*100).toFixed(1)+'%/yr below',c:C.btc,b:true},
+    {t:'your hurdle.'}];
+  const PX=M+22, PW=W-2*M-44;
+  const hEnd=drawSegs(headSegs,PX,0,PW,32,26,true);
+  const sEnd=drawSegs(subSegs,PX,0,PW,26,18,true);
+  const panelH=54+(hEnd+32)+(sEnd+26)+26;
+  ctx.fillStyle=C.panel; roundRect(ctx,M,y,W-2*M,panelH,14); ctx.fill();
+  ctx.fillStyle=C.muted; ctx.font='600 14px ui-monospace,monospace'; ctx.fillText('VERDICT',PX,y+34);
+  let vy=drawSegs(headSegs,PX,y+70,PW,32,26,false);
+  drawSegs(subSegs,PX,vy+40,PW,26,18,false);
+  y+=panelH+22;
+  // ---- three rational mNAVs ----
+  ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
+  ctx.fillText('WHAT IT\'S WORTH TODAY, PER $ OF COIN VALUE — HELD FOR τ* = '+d.horizon+' YEARS',M,y+6); y+=18;
+  const boxes=[['EQUITY',d.ymEq],['ENTERPRISE',d.ymEv],['NET-ASSETS',d.ymNet]];
+  const BW=(W-2*M-2*18)/3, BH=118;
+  boxes.forEach((b,i2)=>{ const x=M+i2*(BW+18);
+    ctx.fillStyle=C.panel2; roundRect(ctx,x,y,BW,BH,12); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,y,BW,BH,12); ctx.stroke();
+    ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,monospace';
+    ctx.fillText('RATIONAL '+b[0],x+18,y+32);
+    ctx.fillText('mNAV',x+18,y+50);
+    ctx.fillStyle=C.txt; ctx.font='650 40px ui-monospace,monospace';
+    ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+98); });
+  y+=BH+34;
+  // ---- distribution (full width, below the mNAVs) ----
+  ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
+  ctx.fillText('PROBABILITY DISTRIBUTION — ANNUALIZED RETURN IN BTC TERMS, '+d.horizon+'-YR HOLD',M,y); y+=16;
+  const histH=H-y-96;
+  drawShareHist(ctx,M,y,W-2*M,histH,d.out,d.rp,C);
+  // ---- footer ----
+  ctx.fillStyle=C.muted; ctx.font='15px system-ui'; ctx.textAlign='left';
+  ctx.fillText('Model output under user-selected assumptions · not investment advice · '+new Date().toISOString().slice(0,10),M,H-34);
   // inline preview (works even where the environment blocks downloads)
   const img=$('sharePreview'), wrap=$('sharePreviewWrap');
   if(img&&wrap){ img.src=c.toDataURL('image/png'); wrap.style.display='block'; }
@@ -1062,10 +1103,10 @@ function drawShareHist(ctx,X,Y,Wd,Ht,out,rp,C){
   const lo=Math.max(s2[Math.floor(0.005*s2.length)],-1), hi=s2[Math.floor(0.995*s2.length)];
   const NB=46, bins=new Array(NB).fill(0), rng=hi-lo||1;
   for(const v of out){ let b=Math.floor((v-lo)/rng*NB); if(b<0)b=0; if(b>=NB)b=NB-1; bins[b]++; }
-  const mx=Math.max(...bins), plotH=Ht-46, baseY=Y+plotH;
+  const mx=Math.max(...bins), plotH=Ht-56, baseY=Y+plotH;
   const xOf=v=>X+ (v-lo)/rng*Wd;
   for(let i=0;i<NB;i++){ const v0=lo+i*rng/NB, vc=v0+rng/NB/2;
-    const h=bins[i]/mx*(plotH-8), x=X+i*Wd/NB;
+    const h=bins[i]/mx*(plotH-56), x=X+i*Wd/NB;   // top 56px reserved for zone labels — bars never reach them
     ctx.fillStyle=vc<0?C.warn:(vc<rp?'#9aa7b2':C.good);
     ctx.globalAlpha=0.88; ctx.fillRect(x,baseY-h,Wd/NB-1.5,h); ctx.globalAlpha=1; }
   // zero and hurdle lines
@@ -1076,16 +1117,19 @@ function drawShareHist(ctx,X,Y,Wd,Ht,out,rp,C){
   // zone percentages
   let nL=0,nM=0,nB=0; for(const v of out){ if(v>=rp)nB++; else if(v>=0)nM++; else nL++; }
   const pc=n=>Math.round(n/out.length*100);
-  ctx.font='600 14px ui-monospace,monospace'; ctx.textAlign='center';
-  if(pc(nL)>0){ ctx.fillStyle=C.warn; ctx.fillText(pc(nL)+'% lose to BTC',(X+xOf(0))/2,Y+18); }
-  ctx.fillStyle=C.good; ctx.fillText(pc(nB)+'% clear hurdle',(Math.max(xOf(rp),xOf(0))+X+Wd)/2,Y+18);
+  ctx.font='600 20px ui-monospace,monospace'; ctx.textAlign='center';
+  const zoneLabel=(txt,cx,col)=>{ const w2=ctx.measureText(txt).width;
+    ctx.fillStyle=C.ink; ctx.fillRect(cx-w2/2-8,Y+8,w2+16,26);
+    ctx.fillStyle=col; ctx.fillText(txt,cx,Y+27); };
+  if(pc(nL)>0) zoneLabel(pc(nL)+'% lose to BTC',(X+xOf(0))/2,C.warn);
+  zoneLabel(pc(nB)+'% clear hurdle',(Math.max(xOf(rp),xOf(0))+X+Wd)/2,C.good);
   // ticks + axis labels
-  ctx.fillStyle=C.muted; ctx.font='12px ui-monospace,monospace';
+  ctx.fillStyle=C.muted; ctx.font='16px ui-monospace,monospace';
   ctx.textAlign='left'; ctx.fillText((lo>0?'+':'')+Math.round(lo*100)+'%',X,baseY+18);
   ctx.textAlign='center'; if(xOf(0)>X+40&&xOf(0)<X+Wd-40) ctx.fillText('0%',xOf(0),baseY+18);
   ctx.textAlign='right'; ctx.fillText('+'+Math.round(hi*100)+'%',X+Wd,baseY+18);
-  ctx.textAlign='center'; ctx.font='12px system-ui'; ctx.fillStyle=C.muted;
-  ctx.fillText('MSTR annualized return in Bitcoin terms (white = holding BTC · dashed = your hurdle)',X+Wd/2,baseY+40);
+  ctx.textAlign='center'; ctx.font='16px system-ui'; ctx.fillStyle=C.muted;
+  ctx.fillText('MSTR annualized return in Bitcoin terms (white = holding BTC · dashed = your hurdle)',X+Wd/2,baseY+44);
   ctx.textAlign='left';
 }
 document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#shareBtn'):null; if(t) makeShareImage(); });
@@ -1168,8 +1212,10 @@ function renderView(view){
     $('results').style.display='block';
     drawHist(out,rp,med);
     view.shareData={vhead:$('vhead').textContent, vheadGood:$('vhead').className.includes('good'),
-      vsub:$('vsub').textContent, ymEq:rationalMnav, ymEv:entMnav, ymNet:netMnav,
-      fair:res.fairValueMed, pnow:res.priceNow, out, rp, horizon:P.horizon};
+      ymEq:rationalMnav, ymEv:entMnav, ymNet:netMnav,
+      fair:res.fairValueMed, pnow:res.priceNow, upside:(res.fairValueMed/res.priceNow-1)*100,
+      med, medExcess:med-rp, out, rp, horizon:P.horizon,
+      btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma};
 }
 function setViewToggle(P,tauStar){
   const t=$('viewToggle');
