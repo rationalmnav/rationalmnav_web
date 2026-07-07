@@ -1195,8 +1195,8 @@ function makeShareImageInner(v){
   boxes.forEach((b,i2)=>{ const x=M+i2*(BW+18);
     ctx.fillStyle=C.panel2; roundRect(ctx,x,y,BW,BH,12); ctx.fill();
     ctx.strokeStyle=C.line; ctx.lineWidth=1; roundRect(ctx,x,y,BW,BH,12); ctx.stroke();
-    ctx.fillStyle=C.muted; ctx.font='600 13px ui-monospace,monospace';
-    ctx.fillText('RATIONAL '+b[0]+' mNAV',x+18,y+34);
+    ctx.fillStyle=C.mstr; ctx.font='650 17px ui-monospace,monospace';
+    ctx.fillText('RATIONAL '+b[0]+' mNAV',x+18,y+36);
     ctx.fillStyle=C.txt; ctx.font='650 40px ui-monospace,monospace';
     ctx.fillText(isFinite(b[1])?b[1].toFixed(2)+'×':'n/a',x+18,y+88);
     if(isFinite(b[1])&&isFinite(b[2])){ const dl=b[1]-b[2];
