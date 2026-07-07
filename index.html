@@ -1143,7 +1143,10 @@ function makeShareImageInner(v){
   ctx.fillStyle='rgba(247,147,26,0.12)'; roundRect(ctx,bx,bY,stw+36,bH,23); ctx.fill();
   ctx.strokeStyle=C.btc; ctx.lineWidth=1.5; roundRect(ctx,bx,bY,stw+36,bH,23); ctx.stroke();
   ctx.fillStyle=C.btc; ctx.textAlign='center';
-  ctx.fillText(siteTxt,bx+(stw+36)/2,bY+31); ctx.textAlign='left';
+  ctx.fillText(siteTxt,bx+(stw+36)/2,bY+31);
+  ctx.fillStyle=C.mstr; ctx.font='650 22px ui-monospace,monospace';
+  ctx.fillText('@rationalmnav',bx+(stw+36)/2,bY+bH+29);
+  ctx.textAlign='left';
   // ---- beliefs ----
   let y=170, y2=170;
   const beliefAt=(x,label,val,useY2)=>{ const yy=useY2?y2:y;
