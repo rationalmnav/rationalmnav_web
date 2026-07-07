@@ -1178,14 +1178,19 @@ function makeShareImageInner(v){
     d.medExcess>=0?{t:'+'+(d.medExcess*100).toFixed(1)+'%/yr above',c:C.good,b:true}
                   :{t:(d.medExcess*100).toFixed(1)+'%/yr below',c:C.btc,b:true},
     {t:'your hurdle.'}];
+  const fSats=v=>isFinite(v)?(v*1e8/1000).toFixed(1)+'k':'n/a', f2=v=>isFinite(v)?v.toFixed(2)+'×':'n/a';
+  const statsLine='Sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' at τ*   ·   '
+    +'equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' at τ*';
   const PX=M+22, PW=W-2*M-44;
   const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);
   const sEnd=drawSegs(subSegs,PX,0,PW,32,22,true);
-  const panelH=56+(hEnd+40)+(sEnd+32)+28;
+  const panelH=56+(hEnd+40)+(sEnd+32)+34+28;    // +34 reserves the centered stats row
   ctx.fillStyle=C.panel; roundRect(ctx,M,y,W-2*M,panelH,14); ctx.fill();
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace'; ctx.fillText('VERDICT',PX,y+34);
   let vy=drawSegs(headSegs,PX,y+76,PW,40,31,false);
-  drawSegs(subSegs,PX,vy+46,PW,32,22,false);
+  const subEnd=drawSegs(subSegs,PX,vy+46,PW,32,22,false);
+  ctx.fillStyle=C.txt; ctx.font='600 19px ui-monospace,monospace'; ctx.textAlign='center';
+  ctx.fillText(statsLine,M+(W-2*M)/2,subEnd+38); ctx.textAlign='left';
   y+=panelH+22;
   // ---- three rational mNAVs ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
@@ -1345,7 +1350,8 @@ function renderView(view){
       fair:res.fairValueMed, pnow:res.priceNow, upside:(res.fairValueMed/res.priceNow-1)*100,
       med, medExcess:med-rp, out, rp, horizon:P.horizon,
       btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma,
-      eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity};
+      eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity,
+      bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT};
 }
 function setViewToggle(P,tauStar){
   const t=$('viewToggle');
