@@ -1179,13 +1179,13 @@ function makeShareImageInner(v){
                   :{t:(d.medExcess*100).toFixed(1)+'%/yr below',c:C.btc,b:true},
     {t:'your hurdle.'}];
   const PX=M+22, PW=W-2*M-44;
-  const hEnd=drawSegs(headSegs,PX,0,PW,32,26,true);
-  const sEnd=drawSegs(subSegs,PX,0,PW,26,18,true);
-  const panelH=54+(hEnd+32)+(sEnd+26)+26;
+  const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);
+  const sEnd=drawSegs(subSegs,PX,0,PW,32,22,true);
+  const panelH=56+(hEnd+40)+(sEnd+32)+28;
   ctx.fillStyle=C.panel; roundRect(ctx,M,y,W-2*M,panelH,14); ctx.fill();
-  ctx.fillStyle=C.muted; ctx.font='600 14px ui-monospace,monospace'; ctx.fillText('VERDICT',PX,y+34);
-  let vy=drawSegs(headSegs,PX,y+70,PW,32,26,false);
-  drawSegs(subSegs,PX,vy+40,PW,26,18,false);
+  ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace'; ctx.fillText('VERDICT',PX,y+34);
+  let vy=drawSegs(headSegs,PX,y+76,PW,40,31,false);
+  drawSegs(subSegs,PX,vy+46,PW,32,22,false);
   y+=panelH+22;
   // ---- three rational mNAVs ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
