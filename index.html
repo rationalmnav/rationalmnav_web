@@ -874,11 +874,12 @@ async function fetchLiveBtc(){
 // prefilled values as the standing fallback. Users can always type over the inputs.
 // OPTIONAL RELIABILITY UPGRADE: paste a free Finnhub API key here (finnhub.io, ~2 min to register).
 // If set, equity quotes use Finnhub's CORS-enabled API directly and skip the public proxies entirely.
-const FINNHUB_KEY='';
+const FINNHUB_KEY='d964j69r01qik59mfdggd964j69r01qik59mfdh0';
 async function fetchQuote(sym){
   const yahoo='https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
   const stooq='https://stooq.com/q/l/?s='+sym.toLowerCase()+'.us&f=sd2t2ohlcv&h&e=csv';
   const viaAllorigins=u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u);
+  const viaAlloriginsGet=u=>'https://api.allorigins.win/get?url='+encodeURIComponent(u);   // JSON {contents} wrapper
   const viaCodetabs=u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u);
   const parseYahoo=async r=>{ const j=await r.json();
     const m=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
@@ -887,17 +888,23 @@ async function fetchQuote(sym){
     const rows=t.trim().split(/\r?\n/); if(rows.length<2) return null;
     const v=parseFloat(rows[1].split(',')[6]); return isFinite(v)?v:null; };
   const parseFinnhub=async r=>{ const j=await r.json(); return j&&j.c>0?j.c:null; };
+  const unwrapGet=parse=>async r=>{ const j=await r.json();                 // allorigins /get envelope
+    if(!j||!j.contents) return null;
+    const fake={json:async()=>JSON.parse(j.contents), text:async()=>j.contents};
+    return parse(fake); };
   const attempts=[];
   if(FINNHUB_KEY) attempts.push(['Finnhub','https://finnhub.io/api/v1/quote?symbol='+sym+'&token='+FINNHUB_KEY,parseFinnhub]);
   attempts.push(
     ['Yahoo/codetabs',viaCodetabs(yahoo),parseYahoo],
     ['Yahoo/allorigins',viaAllorigins(yahoo),parseYahoo],
+    ['Yahoo/allorigins-get',viaAlloriginsGet(yahoo),unwrapGet(parseYahoo)],
     ['Stooq/codetabs',viaCodetabs(stooq),parseStooq],
-    ['Stooq/allorigins',viaAllorigins(stooq),parseStooq]);
+    ['Stooq/allorigins',viaAllorigins(stooq),parseStooq],
+    ['Stooq/allorigins-get',viaAlloriginsGet(stooq),unwrapGet(parseStooq)]);
   let lastErr='no source reachable';
   for(const [name,url,parse] of attempts){
     try{
-      const ac=new AbortController(); const tm=setTimeout(()=>ac.abort(),5000);   // 5s per attempt
+      const ac=new AbortController(); const tm=setTimeout(()=>ac.abort(),8000);   // 8s per attempt (mobile networks)
       const r=await fetch(url,{signal:ac.signal}).finally(()=>clearTimeout(tm));
       if(!r.ok){ lastErr=name+' HTTP '+r.status; continue; }
       const px=await parse(r);
