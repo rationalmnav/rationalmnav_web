@@ -130,8 +130,11 @@
     <details>
       <summary>Market snapshot</summary>
       <div style="margin:10px 0 4px">
-        <button id="fetchLive" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer">↻&nbsp; Refresh live BTC data (spot · 200-WMA · trailing CAGR)</button>
-        <span id="fetchStatus" style="margin-left:9px;font-size:12px;color:var(--muted)"></span>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--txt);cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="liveRefresh" checked style="accent-color:var(--btc)">
+          Use live-populated market prices (refreshed every 15 minutes)
+        </label>
+        <div id="fetchStatus" style="font-size:12px;color:var(--muted)"></div>
         <div id="quoteStatus" style="margin-top:5px;font-size:12px;color:var(--muted)"></div>
       </div>
       <div class="grid">
@@ -824,8 +827,7 @@ function pctl(sorted,q){ const i=(sorted.length-1)*q; const lo=Math.floor(i),hi=
 // 1) Kraken public API — keyless, CORS-enabled, native WEEKLY candles (interval=10080), up to 720 back.
 // 2) CryptoCompare histoday — keyless tier, 1400 daily closes, sampled weekly.
 async function fetchLiveBtc(){
-  const btn=$('fetchLive'), st=$('fetchStatus');
-  btn.disabled=true;
+  const st=$('fetchStatus');
   const apply=(spot,weeklyCloses,src)=>{     // weeklyCloses: oldest→newest, exactly 200, ending at (or near) now
     const wma=weeklyCloses.reduce((a,b)=>a+b,0)/weeklyCloses.length;
     const yrs=(weeklyCloses.length-1)*7/365.25;
@@ -865,7 +867,7 @@ async function fetchLiveBtc(){
     }catch(e2){
       st.textContent='Live fetch failed ('+(e2&&e2.message?e2.message:e2)+') — inputs unchanged; prefilled values in use.';
     }
-  }finally{ btn.disabled=false; }
+  }
 }
 // Equity quotes (MSTR, STRC): exchanges license real-time data, so no keyless CORS-enabled API exists.
 // Best-effort: Yahoo Finance chart metadata (delayed ~15 min) reached through public CORS proxies, with the
@@ -895,7 +897,8 @@ async function fetchQuote(sym){
   let lastErr='no source reachable';
   for(const [name,url,parse] of attempts){
     try{
-      const r=await fetch(url);
+      const ac=new AbortController(); const tm=setTimeout(()=>ac.abort(),5000);   // 5s per attempt
+      const r=await fetch(url,{signal:ac.signal}).finally(()=>clearTimeout(tm));
       if(!r.ok){ lastErr=name+' HTTP '+r.status; continue; }
       const px=await parse(r);
       if(px&&isFinite(px)&&px>0) return px;
@@ -907,18 +910,26 @@ async function fetchQuote(sym){
 async function fetchLiveQuotes(){
   const qs=$('quoteStatus'); if(!qs) return;
   qs.textContent='Fetching MSTR / STRC quotes…';
+  const [rM,rS]=await Promise.allSettled([fetchQuote('MSTR'),fetchQuote('STRC')]);   // parallel
   const out=[];
-  try{ const p=await fetchQuote('MSTR'); $('mstrPrice').value=p.toFixed(2); out.push('MSTR $'+p.toFixed(2)); }
-  catch(e){ out.push('MSTR: failed ('+e.message+'), prefill in use'); }
-  try{ const p=await fetchQuote('STRC'); $('strcPriceNow').value=p.toFixed(2); out.push('STRC $'+p.toFixed(2)); }
-  catch(e){ out.push('STRC: failed ('+e.message+'), prefill in use'); }
+  if(rM.status==='fulfilled'){ $('mstrPrice').value=rM.value.toFixed(2); out.push('MSTR $'+rM.value.toFixed(2)); }
+  else out.push('MSTR: failed ('+rM.reason.message+'), prefill in use');
+  if(rS.status==='fulfilled'){ $('strcPriceNow').value=rS.value.toFixed(2); out.push('STRC $'+rS.value.toFixed(2)); }
+  else out.push('STRC: failed ('+rS.reason.message+'), prefill in use');
   updateDerived();
   qs.textContent='Quotes (delayed ~15 min): '+out.join(' · ');
 }
-document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#fetchLive'):null; if(t){ fetchLiveBtc(); fetchLiveQuotes(); } });
-// auto-refresh on page load; prefilled values remain as fallback if any fetch fails
-fetchLiveBtc();
-fetchLiveQuotes();
+// auto-refresh on page load (when enabled); prefilled values remain as fallback if any fetch fails
+function liveOn(){ const cb=$('liveRefresh'); return !cb||cb.checked; }
+if(liveOn()){ fetchLiveBtc(); fetchLiveQuotes(); }
+// silent refresh every 15 minutes while the tab is visible and live updates are enabled
+// (~3 lightweight requests per cycle per visitor — far below any public rate limit)
+setInterval(()=>{ if(!document.hidden&&liveOn()){ fetchLiveBtc(); fetchLiveQuotes(); } },15*60*1000);
+$('liveRefresh')&&$('liveRefresh').addEventListener('change',function(){
+  if(this.checked){ fetchLiveBtc(); fetchLiveQuotes(); }
+  else{ $('fetchStatus').textContent='Live updates paused — inputs are under manual control.';
+        $('quoteStatus').textContent=''; }
+});
 
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
