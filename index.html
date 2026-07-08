@@ -12,10 +12,16 @@
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
-  .seg{display:none;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px}
-  .seg button{background:var(--panel2);color:var(--muted);border:0;padding:8px 16px;font:inherit;font-size:13px;cursor:pointer}
-  .seg button.active{background:var(--panel);color:var(--txt);font-weight:600}
-  .seg button+button{border-left:1px solid var(--line)}
+  .segWrap{display:none;margin-bottom:14px;text-align:center}
+  .segHint{font-size:12px;color:var(--btc);font-weight:600;letter-spacing:.02em;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .segHint::before{content:'\21C6';font-size:15px}
+  .seg{display:inline-flex;align-items:stretch;border:2px solid var(--btc);border-radius:11px;overflow:hidden;background:var(--panel2)}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:7px 20px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .12s,color .12s;line-height:1.3;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .seg button .sub{display:block;font-size:14px;font-weight:600;opacity:.85}
+  .seg button:hover{color:var(--txt)}
+  .seg button.active{background:var(--btc);color:#0b1016;font-weight:700}
+  .seg button.active .sub{color:#0b1016;opacity:1}
+  .seg button+button{border-left:2px solid var(--btc)}
   *{box-sizing:border-box}
   body{margin:0;background:var(--ink);color:var(--txt);font-family:var(--sans);
        line-height:1.45;-webkit-font-smoothing:antialiased;padding:18px;}
@@ -299,7 +305,10 @@
   <button id="run">Run assessment</button>
 
   <section id="results" style="display:none;margin-top:14px">
-    <div class="seg" id="viewToggle"><button id="tgUser">Your horizon</button><button id="tgOpt" class="active">Optimal exit</button></div>
+    <div class="segWrap" id="viewToggleWrap">
+      <div class="segHint">Two views — tap to switch</div>
+      <div class="seg" id="viewToggle"><button id="tgUser" class="active">Your horizon</button><button id="tgOpt">Optimal exit</button></div>
+    </div>
     <div class="verdict" id="verdict" style="margin-bottom:16px">
       <div class="vlabel">Verdict</div>
       <div class="vhead idle" id="vhead">Awaiting inputs</div>
@@ -322,8 +331,9 @@
 
   <section id="sharePanel" class="panelCard" style="display:none">
     <div class="seclabel">Share</div>
-    <div class="charthelp" style="margin-bottom:10px">Generates a snapshot image of this run — your beliefs, the verdict, the return distribution, and the three rational mNAVs that reflect the optimal holding horizon.</div>
-    <button id="shareBtn" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:inherit;font-size:12.5px;cursor:pointer">⬇&nbsp; Download share image (PNG)</button>
+    <div class="charthelp" style="margin-bottom:10px">Generates a snapshot image of this run — your beliefs, the verdict, the return distribution, and the rational mNAVs.</div>
+    <button id="shareBtnUser" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:inherit;font-size:12.5px;cursor:pointer;margin-right:8px">⬇&nbsp; Download image — Your horizon</button>
+    <button id="shareBtnOpt" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:inherit;font-size:12.5px;cursor:pointer">⬇&nbsp; Download image — Optimal exit</button>
     <span id="shareStatus" style="margin-left:10px;font-size:12px;color:var(--muted)"></span>
     <div id="sharePreviewWrap" style="display:none;margin-top:12px">
       <img id="sharePreview" style="width:100%;border:1px solid var(--line);border-radius:10px" alt="share image preview">
@@ -1099,9 +1109,10 @@ function drawHist(out,rp,med){
 }
 
 let RM_VIEWS=null;
+let RM_TAUSTAR=null;
 function shareStatus(msg){ const el=$('shareStatus'); if(el) el.textContent=msg; }
-function makeShareImage(){
-  const v=(RM_VIEWS&&(RM_VIEWS.opt||RM_VIEWS.user));
+function makeShareImage(which){
+  const v=RM_VIEWS&&(which==='opt'?RM_VIEWS.opt:RM_VIEWS.user);
   if(!v||!v.shareData){ shareStatus('Run the assessment first.'); return; }
   shareStatus('Generating…');
   try{ makeShareImageInner(v); }catch(err){ shareStatus('Failed: '+(err&&err.message?err.message:err)); }
@@ -1126,6 +1137,22 @@ function makeShareImageInner(v){
         if(!measureOnly){ ctx.fillStyle=sg.c||C.txt; ctx.fillText(w2,cx,y); }
         cx+=ww; } }
     return y;
+  }
+  // draw colored segments as centered line(s), wrapping to maxW; returns the final baseline y
+  function drawSegsCentered(segs,cx,y,size,maxW,lh){
+    maxW=maxW||1e9; lh=lh||size+8;
+    // pack segments into lines under maxW (by word)
+    const lines=[[]]; let lineW=0;
+    for(const sg of segs){ ctx.font=(sg.b?'650 ':'400 ')+size+'px system-ui';
+      for(const w2 of String(sg.t).split(' ')){ if(!w2) continue;
+        const ww=ctx.measureText(w2+' ').width;
+        if(lineW+ww>maxW && lineW>0){ lines.push([]); lineW=0; }
+        lines[lines.length-1].push({t:w2,c:sg.c,b:sg.b,w:ww}); lineW+=ww; } }
+    for(const ln of lines){ let tot=0; for(const it of ln) tot+=it.w; let x=cx-tot/2;
+      for(const it of ln){ ctx.font=(it.b?'650 ':'400 ')+size+'px system-ui';
+        ctx.fillStyle=it.c||C.txt; ctx.textAlign='left'; ctx.fillText(it.t,x,y); x+=it.w; }
+      y+=lh; }
+    return y-lh;
   }
   // ---- header ----
   ctx.fillStyle=C.muted; ctx.font='600 17px ui-monospace,Menlo,monospace';
@@ -1156,7 +1183,8 @@ function makeShareImageInner(v){
     if(useY2) y2+=68; else y+=68; };
   beliefAt(M,'BTC price model',modelLbl,false);
   beliefAt(M,'Wrapper-risk hurdle',(d.rp*100).toFixed(1).replace(/\.0$/,'')+'% / yr vs self-custody',false);
-  beliefAt(M,'Optimal holding horizon (τ*)',d.horizon+' years',false);
+  beliefAt(M,(d.isOpt?'Optimal holding horizon (τ*)':'Your holding horizon'),
+    d.horizon+' years'+((!d.isOpt&&d.tauStar&&d.tauStar!==d.horizon)?'  (Optimal = '+d.tauStar+' years)':''),false);
   // right column: the market snapshot driving the fair-value anchor
   const RXC=W/2+40, fmt$=v=>'$'+Math.round(v).toLocaleString('en-US');
   let fairBtc=d.btcSpot;
@@ -1169,32 +1197,39 @@ function makeShareImageInner(v){
   // ---- verdict panel (dynamic height, tool-matched colors) ----
   const fvCol=d.fair>=d.pnow?C.good:C.btc;
   const headSegs=[{t:d.vhead,c:d.vheadGood?C.good:C.warn,b:true}];
-  const subSegs=[
+  const subLine1=[
     {t:'Model'},{t:'MSTR fair value ≈',b:true},{t:'$'+d.fair.toFixed(0),c:fvCol,b:true},
     {t:'vs. $'+d.pnow.toFixed(0)+' today →'},
-    {t:(d.upside>=0?'+':'')+d.upside.toFixed(0)+'% '+(d.upside>=0?'undervalued':'overvalued'),c:fvCol,b:true},
-    {t:'· Median MSTR return'},{t:(d.med*100>=0?'+':'')+(d.med*100).toFixed(1)+'%/yr',b:true},
+    {t:(d.upside>=0?'+':'')+d.upside.toFixed(0)+'% '+(d.upside>=0?'undervalued':'overvalued'),c:fvCol,b:true}];
+  const subLine2=[
+    {t:'Median MSTR return'},{t:(d.med*100>=0?'+':'')+(d.med*100).toFixed(1)+'%/yr',b:true},
     {t:'in BTC terms —'},
     d.medExcess>=0?{t:'+'+(d.medExcess*100).toFixed(1)+'%/yr above',c:C.good,b:true}
                   :{t:(d.medExcess*100).toFixed(1)+'%/yr below',c:C.btc,b:true},
     {t:'your hurdle.'}];
   const fSats=v=>isFinite(v)?(v*1e8/1000).toFixed(1)+'k':'n/a', f2=v=>isFinite(v)?v.toFixed(2)+'×':'n/a';
-  const statsLine='Sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' at τ*   ·   '
-    +'equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' at τ*';
-  const PX=M+22, PW=W-2*M-44;
-  const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);
-  const sEnd=drawSegs(subSegs,PX,0,PW,32,22,true);
-  const panelH=56+(hEnd+40)+(sEnd+32)+34+28;    // +34 reserves the centered stats row
+  const _atH=d.isOpt?'at τ*':'at exit';
+  const statsLine='Sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' '+_atH+'   ·   '
+    +'equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' '+_atH;
+  const PX=M+22, PW=W-2*M-44, CX=M+(W-2*M)/2;
+  const SUB=26;                                  // enlarged verdict sub-line size (was 22)
+  const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);   // measure headline height (centered draw below)
+  const panelH=56+(hEnd+40)+(2*SUB+22)+40+34+28;      // headline + two centered sub-lines + stats row
   ctx.fillStyle=C.panel; roundRect(ctx,M,y,W-2*M,panelH,14); ctx.fill();
-  ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace'; ctx.fillText('VERDICT',PX,y+34);
-  let vy=drawSegs(headSegs,PX,y+76,PW,40,31,false);
-  const subEnd=drawSegs(subSegs,PX,vy+46,PW,32,22,false);
+  ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace'; ctx.textAlign='left'; ctx.fillText('VERDICT',PX,y+34);
+  // headline centered (wraps if needed)
+  let hy=y+82;
+  const hEndY=drawSegsCentered(headSegs,CX,hy,31,PW,40);
+  // two verdict sentences, each centered on its own line
+  let l1=hEndY+46; const e1=drawSegsCentered(subLine1,CX,l1,SUB,PW,SUB+10);
+  let l2=e1+SUB+12; const e2=drawSegsCentered(subLine2,CX,l2,SUB,PW,SUB+10);
+  // stats line centered below
   ctx.fillStyle=C.txt; ctx.font='600 19px ui-monospace,monospace'; ctx.textAlign='center';
-  ctx.fillText(statsLine,M+(W-2*M)/2,subEnd+38); ctx.textAlign='left';
+  ctx.fillText(statsLine,CX,e2+40); ctx.textAlign='left';
   y+=panelH+22;
   // ---- three rational mNAVs ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
-  ctx.fillText('WHAT IT\'S WORTH TODAY, PER $ OF COIN VALUE — HELD FOR τ* = '+d.horizon+' YEARS',M,y+6); y+=18;
+  ctx.fillText('WHAT IT\'S WORTH TODAY, PER $ OF COIN VALUE — HELD FOR '+(d.isOpt?'τ* = ':'')+d.horizon+' YEARS',M,y+6); y+=18;
   const boxes=[['EQUITY',d.ymEq,d.eq0],['ENTERPRISE',d.ymEv,d.ev0],['NET-ASSETS',d.ymNet,d.net0]];
   const BW=(W-2*M-2*18)/3, BH=142;
   boxes.forEach((b,i2)=>{ const x=M+i2*(BW+18);
@@ -1266,7 +1301,11 @@ function drawShareHist(ctx,X,Y,Wd,Ht,out,rp,C){
   ctx.fillText('MSTR annualized return in Bitcoin terms (white = holding BTC · dashed = your hurdle)',X+Wd/2,baseY+44);
   ctx.textAlign='left';
 }
-document.addEventListener('click',function(e){ const t=e.target&&e.target.closest?e.target.closest('#shareBtn'):null; if(t) makeShareImage(); });
+document.addEventListener('click',function(e){
+  if(!e.target||!e.target.closest) return;
+  if(e.target.closest('#shareBtnUser')) makeShareImage('user');
+  else if(e.target.closest('#shareBtnOpt')) makeShareImage('opt');
+});
 function renderView(view){
     const P=view.P, res=view.res;
     res.mktEntry=res.justifiedEntry; res.mktExit=res.premiumPathT;
@@ -1351,17 +1390,20 @@ function renderView(view){
       med, medExcess:med-rp, out, rp, horizon:P.horizon,
       btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma,
       eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity,
-      bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT};
+      bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT,
+      isOpt:(RM_VIEWS&&view===RM_VIEWS.opt), tauStar:RM_TAUSTAR};
 }
 function setViewToggle(P,tauStar){
-  const t=$('viewToggle');
+  const t=$('viewToggleWrap');
   if(tauStar===null){ t.style.display='none'; return; }
-  t.style.display='inline-flex';
-  $('tgUser').textContent='Your horizon ('+P.horizon+' yr)';
-  $('tgOpt').textContent='Optimal exit (\u03c4* = '+tauStar+' yr)';
-  setViewActive('opt');
+  t.style.display='block';
+  $('tgUser').innerHTML='Your horizon<span class="sub">('+P.horizon+' yr)</span>';
+  $('tgOpt').innerHTML='Optimal exit<span class="sub">(\u03c4* = '+tauStar+' yr)</span>';
+  setViewActive('user');
 }
+let RM_ACTIVE='user';
 function setViewActive(which){
+  RM_ACTIVE=which;
   $('tgUser').classList.toggle('active',which==='user');
   $('tgOpt').classList.toggle('active',which==='opt');
 }
@@ -1435,12 +1477,15 @@ $('run').addEventListener('click',()=>{
     }
     const resU=runModel(Object.assign({},P,{fairPass:true,recordPath:true}));
     RM_VIEWS={user:{P:Object.assign({},P),res:resU},opt:null};
+    RM_TAUSTAR=tauStar;
     if(tauStar!==null){
       const Po=Object.assign({},P,{horizon:tauStar});
       RM_VIEWS.opt={P:Po,res:runModel(Object.assign({},Po,{fairPass:true,recordPath:true}))};
     }
     setViewToggle(P,tauStar);
-    renderView(RM_VIEWS.opt||RM_VIEWS.user);
+    // Prime the optimal view's shareData (the share image reads RM_VIEWS.opt), then render the user view for display.
+    if(RM_VIEWS.opt) renderView(RM_VIEWS.opt);
+    renderView(RM_VIEWS.user);
     if(hcurve){ $('optSection').style.display='block'; $('sharePanel').style.display='block'; drawCurve(hcurve,tauStar); }
     else { $('optSection').style.display='none'; $('sharePanel').style.display='none'; }
     $('run').textContent='Run assessment';
