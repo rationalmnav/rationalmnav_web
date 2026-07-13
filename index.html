@@ -92,6 +92,13 @@
   .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;}
   .stat .k{font-size:11px;color:var(--muted);} .stat .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:2px;}
   .stat .v.pos{color:var(--good)} .stat .v.neg{color:var(--btc)}
+  .mnavMx{grid-column:1/-1;display:grid;grid-template-columns:auto repeat(3,1fr);gap:7px 12px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;align-items:center;}
+  .mnavMx .h{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+  .mnavMx .rl{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .mnavMx .val{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--txt);}
+  .mnavMx .val.pos{color:var(--good)} .mnavMx .val.neg{color:var(--btc)}
+  @media(max-width:480px){.mnavMx .val{font-size:13.5px}.mnavMx .rl{font-size:10.5px}.mnavMx{gap:6px 8px;padding:9px 10px}}
   canvas{width:100%;height:210px;display:block;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);}
   .panelCard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;margin-top:16px;}
   .panelCard>.seclabel{margin-bottom:12px;}
@@ -1335,7 +1342,17 @@ function renderView(view){
       `<b style="color:var(--btc)">Forced BTC sale at a convert put date on ${(res.pForced*100).toFixed(0)}% of paths</b> (avg ${(res.soldFrac*100).toFixed(2)}% of the stack). `;
 
     // stats
-    const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
+    const mnavMatrix=(rEq,rEv,rNet,eEq,eEv,eNet,xEq,xEv,xNet,exitYrs)=>{
+  const f=v=>isFinite(v)?v.toFixed(2)+'×':'n/a';
+  const cls=(v,ref)=>(isFinite(v)&&isFinite(ref))?(v>=ref?' pos':' neg'):'';
+  return `<div class="mnavMx">
+    <div></div><div class="h">Rational (today)</div><div class="h">Entry (today)</div><div class="h">Exit<br>(${exitYrs} yr)</div>
+    <div class="rl">Equity mNAV</div><div class="val${cls(rEq,eEq)}">${f(rEq)}</div><div class="val">${f(eEq)}</div><div class="val${cls(xEq,eEq)}">${f(xEq)}</div>
+    <div class="rl">Enterprise mNAV</div><div class="val${cls(rEv,eEv)}">${f(rEv)}</div><div class="val">${f(eEv)}</div><div class="val${cls(xEv,eEv)}">${f(xEv)}</div>
+    <div class="rl">Net-assets mNAV</div><div class="val${cls(rNet,eNet)}">${f(rNet)}</div><div class="val">${f(eNet)}</div><div class="val${cls(xNet,eNet)}">${f(xNet)}</div>
+  </div>`;
+};
+const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
     const fmtSats=x=>Math.round(x*1e8).toLocaleString()+' sats';
     const fmtStack=x=> x>=1e6 ? (x/1e6).toFixed(2)+'M BTC' : Math.round(x/1e3).toLocaleString()+'K BTC';
     const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
@@ -1364,16 +1381,7 @@ function renderView(view){
     $('statsGrid').innerHTML=
       cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
       cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
-      cell('Your rational equity mNAV (today)',rationalMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational enterprise mNAV (today)',entMnav.toFixed(2)+'×',rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Your rational net-assets mNAV (today)',(isFinite(netMnav)?netMnav.toFixed(2)+'×':'n/a'),rationalMnav>=res.mnav0?'pos':'neg')+
-      cell('Median excess vs hurdle',(medExcess*100>=0?'+':'')+(medExcess*100).toFixed(1)+'%/yr',medExcess>=0?'pos':'neg')+
-      cell('Entry equity mNAV (today)',res.mnav0.toFixed(2)+'×')+
-      cell('Exit equity mNAV',res.mktExit.toFixed(2)+'×',res.mktExit>=res.mnav0?'pos':'neg')+
-      cell('Entry enterprise mNAV (today)',entryEnt.toFixed(2)+'×')+
-      cell('Exit enterprise mNAV',exitEnt.toFixed(2)+'×',exitEnt>=entryEnt?'pos':'neg')+
-      cell('Entry net-assets mNAV (today)',(isFinite(entryNet)?entryNet.toFixed(2)+'×':'n/a'))+
-      cell('Exit net-assets mNAV',(isFinite(exitNet)?exitNet.toFixed(2)+'×':'n/a'),(isFinite(exitNet)&&isFinite(entryNet)&&exitNet>=entryNet)?'pos':'neg')+
+      mnavMatrix(rationalMnav,entMnav,netMnav,res.mnav0,entryEnt,entryNet,res.mktExit,exitEnt,exitNet,P.horizon)+
       cell('BPS at Entry',fmtSats(res.bpsEntry))+
       cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
       cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
