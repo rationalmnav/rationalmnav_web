@@ -252,12 +252,12 @@
     <details>
       <summary>MSTR ATM Assumptions</summary>
       <div class="grid" style="margin-top:10px">
-        <div class="f"><label>Below-NAV ATM floor (mNAV)</label><input id="mnavAtmFloor" value="0.70"></div>
+        
         <div class="f"><label>Below-NAV ATM cap (% BTC val/qtr)</label><input id="maxCommonAtm" value="3"></div>
         <div class="f"><label>Accretive ATM (issue into strength, stack BTC)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="accretiveOn" checked style="width:auto"> enable</label></div>
         <div class="f"><label>Accretive ATM: min mNAV to issue (capacity channel off)</label><input id="accretiveMnavMin" value="1.01"></div>
         <div class="f"><label>Collateral-capacity ATM: common issuance at sub-1 mNAV unlocks STRC capacity</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="atmCollatChannel" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Accretive ATM hard floor (mNAV)</label><input id="atmAbsFloor" value="0.72"></div>
+        
         <div class="f"><label>Accretive ATM: pace × premium (slope)</label><input id="accretiveSlope" value="0.10"></div>
         <div class="f"><label>Accretive ATM: max % BTC value / qtr</label><input id="accretiveCap" value="12"></div>
         <div class="f"><label>Discount buyback (sell BTC to retire shares below NAV)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="buybackOn" checked style="width:auto"> enable</label></div>
@@ -484,6 +484,16 @@ function runModel(P){
   const vovS2=P.vovVol*P.vovVol/(2*P.vovRevert);  // stationary variance of log-vol (mean-preservation)
 
   let drTrend=F0;   // deterministic DR trend, compounds from F0   // deterministic DR trend, compounds from F0 at the arithmetic CAGR
+  // Equity mNAV at which enterprise mNAV = 1.0, from the live capital structure of path i.
+  // m_ev = m_eq*xcR + sSr  =>  m_eq* = (1 - sSr)/xcR. Used by the dynamic issuance/buyback gates (floor params = 0).
+  const evParityEq=(i)=>{
+    let dAct=0,cvSh=0;
+    for(let j=0;j<P.converts.length;j++){ if(convActive[j][i]){ dAct+=P.converts[j][1]; cvSh+=P.converts[j][1]/P.converts[j][2]; } }
+    const bvp=Math.max(held[i]*btc[i],1);
+    const sSr=(S[i]+dAct-R[i])/bvp;
+    const xcR=Math.max(N[i]-cvSh,1)/Math.max(N[i],1);
+    return Math.max((1-sSr)/Math.max(xcR,1e-9),0);
+  };
   for(let k=0;k<steps;k++){
     const tHeld=(k+1)*dt, calT=T0+tHeld, days=calT*365.25;
     const sigAnchor=P.sigNow*Math.pow(calT/T0,-P.volDecay);   // shared age-decaying vol for all three models
@@ -570,17 +580,18 @@ function runModel(P){
       const uP=(P.atmCollatChannel?Math.min(Math.max(1-roomP/Math.max(capQtrP,1e-9),0),1)*(carryEst?1:0):0);
       const phiP=P.byNeutral+P.byKappaUp*Math.max(gEma[i]-P.byMomG0,0)-P.byKappaDn*Math.max(-gEma[i],0);
       let mnav=Math.max(netRatio+(byEma[i]-hS)*P.byDur,P.mnavFloor);
+      const atmFloorNow=evParityEq(i);                                  // dynamic EV-parity issuance floor
       for(let it=0;it<6;it++){
         let fA=0, atmBy=0;
         if(P.atmCollatChannel){
           const pkg=(1+ampTgt*uP)*mnav-1;
-          if(pkg>0 && mnav>=P.atmAbsFloor){ fA=Math.min(P.accretiveSlope*pkg,P.accretiveCap)*concMult; atmBy=fA*Math.max(pkg,0)/Math.max(mnav,1e-9); }
+          if(pkg>0 && mnav>=atmFloorNow){ fA=Math.min(P.accretiveSlope*pkg,P.accretiveCap)*concMult; atmBy=fA*Math.max(pkg,0)/Math.max(mnav,1e-9); }
         } else if(mnav>=P.accretiveMnavMin){ fA=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap)*concMult; atmBy=fA*Math.max(mnav-1,0); }
         const byStep=atmBy+byStrcP;
         const byFwd=P.byWReal*byEma[i]+P.byWMom*phiP+P.byWCap*(byStep/dt);
         mnav=0.5*mnav+0.5*Math.max(netRatio+(byFwd-hS)*P.byDur,P.mnavFloor);
       }
-      if(k===0) floorEffArr[i]=P.atmCollatChannel?Math.max(1/(1+ampTgt*uP),P.atmAbsFloor):P.accretiveMnavMin;
+      if(k===0) floorEffArr[i]=P.atmCollatChannel?Math.max(1/(1+ampTgt*uP),atmFloorNow):P.accretiveMnavMin;
       if(recordPath) pcol[i]=mnav;
       const price=mnav*bv/Math.max(N[i],1);
 
@@ -589,7 +600,7 @@ function runModel(P){
       if(P.accretiveOn && btc[i]>btcRef[i] && !paused[i]){
         if(P.atmCollatChannel){
           const pkgA=(1+ampTgt*uP)*mnav-1;                          // packaged gross-BY accretion per $
-          if(pkgA>0 && mnav>=P.atmAbsFloor){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*pkgA,P.accretiveCap)*concMult; }
+          if(pkgA>0 && mnav>=atmFloorNow){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*pkgA,P.accretiveCap)*concMult; }
         } else if(mnav>=P.accretiveMnavMin){ doAtm=true; fracAtm=Math.min(P.accretiveSlope*(mnav-1),P.accretiveCap)*concMult; }
       }
       if(doAtm){
@@ -670,13 +681,17 @@ function runModel(P){
       const capUsd=P.maxCommonAtm*bv;                         // below-NAV common issuance the market can place this qtr
       let need=Math.max(divq+cvCoupon-P.fcf,0);
       const draw=Math.min(need,Math.max(R[i]-Rfloor,0)); R[i]-=draw; need-=draw;
-      // ATM: accretive above par (uncapped), DEFENSIVE below par down to mnavAtmFloor (capped by market depth)
-      if(mnav>P.mnavAtmFloor && need>0){
+      // ATM: accretive above par (uncapped); DEFENSIVE below par while enterprise mNAV >= 1.0 (dynamic
+      // parity gate), capped by market depth
+      const wfFloor=evParityEq(i);
+      let wfFunded=false;
+      if(mnav>=wfFloor && need>0){
         const fund=(mnav>1.0)?need:Math.min(need,capUsd);
-        N[i]+=fund/Math.max(price,1e-9); need-=fund;
+        N[i]+=fund/Math.max(price,1e-9); need-=fund; wfFunded=fund>0;
       }
-      // LAST-RESORT BTC SALE: (a) reserve exhausted + (b) common ATM too dilutive + (c) STRC ATM shut -> sell BTC (cover dividend only)
-      if(P.btcForcedSaleOn && need>0 && mnav<=P.mnavAtmFloor && !strcAvail){
+      // LAST-RESORT BTC SALE: (a) reserve exhausted + (b) below the parity gate (dilution no longer raises net
+      // backing) + (c) STRC ATM shut -> sell BTC (cover dividend only)
+      if(P.btcForcedSaleOn && need>0 && mnav<wfFloor && !strcAvail){
         const soldUsd=Math.min(need, P.btcForcedSaleCapFrac*held[i]*btc[i]);
         held[i]-=soldUsd/Math.max(btc[i],1e-9); btcSoldDiv[i]+=soldUsd/Math.max(btc[i],1e-9);
         need-=soldUsd; divForcedSale[i]=1; divForcedSaleEver[i]=1;
@@ -696,8 +711,9 @@ function runModel(P){
       const roomBb=Math.max(ampTgt*held[i]*btc[i]-(S[i]+D[i]),0);
       const paceBb=P.maxIssue*held[i]*btc[i]*concMult;
       const uBb=Math.min(Math.max(1-roomBb/Math.max(paceBb,1e-9),0),1)*(carryOpen?1:0);
-      const bbFloor=P.atmCollatChannel?Math.max(1/(1+ampTgt*uBb),P.atmAbsFloor):P.accretiveMnavMin;
-      if(P.buybackOn && mnav<bbFloor && !pauseNow && !divForcedSale[i] && R[i]>=Rlow){
+      const bbClamp=evParityEq(i);
+      const bbFloor=P.atmCollatChannel?Math.max(1/(1+ampTgt*uBb),bbClamp):P.accretiveMnavMin;
+      if(P.buybackOn && mnav<bbFloor && !pauseNow && !divForcedSale[i] && !wfFunded && R[i]>=Rlow){
         const bvBb=held[i]*btc[i], fracb=Math.min(P.buybackSlope*(1-mnav),P.buybackCap);
         const priceBb=mnav*bvBb/Math.max(N[i],1);
         let bbUsd=fracb*bvBb;
@@ -759,7 +775,8 @@ function runModel(P){
             else if(strcAvail){ S[i]+=Pr; }                    // 2) STRC ATM near par (swap debt->pref)
             else {                                             // 3) reserve, 4) defensive ATM (capped), 5) forced sale
               const rd=Math.min(Pr,Math.max(R[i]-Rfloor,0)); R[i]-=rd; let resid=Pr-rd;
-              if(mnav>P.mnavAtmFloor){ const f=Math.min(resid,capUsd); N[i]+=f/Math.max(price,1e-9); resid-=f; }
+              const csFloor=evParityEq(i);
+              if(mnav>=csFloor){ const f=Math.min(resid,capUsd); N[i]+=f/Math.max(price,1e-9); resid-=f; }
               if(resid>0){ const sell=resid/Math.max(btc[i],1e-9); held[i]-=sell; btcSold[i]+=sell; forcedSale[i]=1; }
             }
           }
@@ -1436,11 +1453,11 @@ $('run').addEventListener('click',()=>{
     byDur:num('byDur'), byKappaUp:num('byKappaUp'), byKappaDn:0.10, byNeutral:num('byNeutral')/100,
     byWMom:num('byWMom'), byWReal:Math.max(0.85-num('byWMom'),0), byWCap:0.15, byMomG0:0.0,
     byEma0:num('byEma0')/100, gEma0:num('gEma0')/100, byEmaHl:1.5, gEmaHl:1.0,
-    atmCollatChannel:$('atmCollatChannel').checked, atmAbsFloor:num('atmAbsFloor'),
+    atmCollatChannel:$('atmCollatChannel').checked,
     strcRetireOn:true, strcRetireMaxPx:0.95, strcRetireSlope:0.30, strcRetireCap:0.10,
     strcRetireSwapMargin:0.10, strcRetireOcMargin:0.0, strcRetireComFrac:0.02,
     mnavFloor:0.30, engineMin:1.00, maxIssue:0.05, fcf:0, tbill:0.04,
-    mnavAtmFloor:num('mnavAtmFloor'), maxCommonAtm:num('maxCommonAtm')/100,
+    maxCommonAtm:num('maxCommonAtm')/100,
     btcForcedSaleOn:$('btcForcedSaleOn').checked, btcForcedSaleCapFrac:num('btcForcedSaleCapFrac')/100,
     ust10_0:num('ust10Now')/100, ust10Long:num('ust10Long')/100, ust10Corr:num('ust10Corr'),
     ust10Revert:0.40, ust10Vol:0.009, ust10Floor:0.005,
