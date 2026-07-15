@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STRC Corridor Control Simulator — rationalmnav.com</title>
+<style>
+:root{
+  --bg:#0b0f14; --panel:#12181f; --panel2:#0e141b; --line:#223040;
+  --txt:#e8edf2; --muted:#6b7a88; --btc:#F7931A; --cyan:#46C7E6;
+  --good:#57C98A; --bad:#e06c55; --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:18px 14px 60px}
+.wrap{max-width:980px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--btc);text-transform:uppercase;white-space:nowrap}
+h1{font-size:26px;margin:4px 0 2px;font-weight:650}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:18px}
+.panelCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+details{border-top:1px solid var(--line);padding:8px 0}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--btc);list-style:none;display:flex;align-items:center;gap:8px;padding:4px 0}
+summary::before{content:'\25B8';transition:transform .15s;font-size:12px}
+details[open] summary::before{transform:rotate(90deg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 14px;padding:8px 0 6px}
+.f label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;cursor:pointer;width:fit-content;border-bottom:1px dotted #3a4a58}
+.f label:hover{color:var(--txt)}
+.f input[type=text],.f input[type=number],.f select{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-size:13px;font-family:var(--mono)}
+.f.chk{display:flex;align-items:center;gap:8px;padding-top:14px}
+.f.chk label{margin:0;font-size:12px;color:var(--txt)}
+.f.chk input{accent-color:var(--btc);width:15px;height:15px}
+.runRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+#run{background:var(--btc);color:#0b1016;border:0;border-radius:9px;padding:11px 26px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+#run:hover{filter:brightness(1.07)}
+#status{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.legend b{font-weight:600}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+canvas{width:100%;height:230px;display:block;border:1px solid var(--line);border-radius:9px;background:var(--panel2);margin:6px 0 2px}
+.chartTitle{font-size:13px;font-weight:600;margin-top:12px}
+.statsTbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:6px}
+.statsTbl th,.statsTbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+.statsTbl th:first-child,.statsTbl td:first-child{text-align:left;font-family:system-ui;color:var(--muted)}
+.statsTbl th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.colA{color:var(--cyan)} .colB{color:var(--btc)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+footer{color:var(--muted);font-size:11.5px;margin-top:26px;font-family:var(--mono)}
+#helpBox{display:none;position:fixed;left:12px;right:12px;bottom:12px;max-width:700px;margin:0 auto;background:#161f29;
+  border:1px solid var(--btc);border-radius:12px;padding:14px 44px 14px 16px;font-size:13.5px;line-height:1.55;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:50}
+#helpBox b{color:var(--btc)}
+#helpClose{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+#helpClose:hover{color:var(--txt)}
+.helpHint{font-size:11.5px;color:var(--muted);margin:-8px 0 8px}
+@media(max-width:520px){h1{font-size:21px} canvas{height:190px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">rationalmnav.com &middot; companion tool</div>
+  <h1>STRC Corridor Control Simulator</h1>
+  <div class="sub">A PID-style price-control system for a par-seeking preferred stock, tested against the current policy under identical market shocks. Policy A = status quo (hard issuance wall at par, ratchet-only coupon, no buybacks). Policy B = PID controller (issuance ramp above par, par-anchored progressive buybacks below par, coupon integral with anti-windup). Not affiliated with Strategy. Educational only.</div>
+
+  <div class="panelCard">
+    <div class="helpHint">Tap any underlined field name for a plain-language explanation.</div>
+    <details open><summary>Scenario &amp; run</summary>
+      <div class="grid">
+        <div class="f"><label>Scenario</label><select id="scenario">
+          <option value="baseline" selected>Baseline (calibrated to today)</option>
+          <option value="rate">Rate shock (+150 bp in yr 1)</option>
+          <option value="credit">Credit scare (spread jump)</option>
+          <option value="btccrash">BTC-crash contagion</option>
+          <option value="liquidity">Liquidity drought</option>
+          <option value="slowseason">Slow seasoning</option>
+          <option value="attack">Speculative attack</option>
+        </select></div>
+        <div class="f"><label>Mode</label><select id="mode">
+          <option value="single" selected>Single path (storyline)</option>
+          <option value="mc">Monte Carlo (200 paths)</option>
+        </select></div>
+        <div class="f"><label>Horizon (years)</label><input id="hz" value="3"></div>
+        <div class="f"><label>Seed</label><input id="seed" value="7"></div>
+      </div>
+    </details>
+    <details><summary>Corridor controller (Policy B)</summary>
+      <div class="grid">
+        <div class="f"><label>Issuance ramp top ($)</label><input id="cap" value="101"></div>
+        <div class="f"><label>Max ATM issuance ($M/day)</label><input id="atmMax" value="8"></div>
+        <div class="f"><label>Buyback linear gain ($M/day per $ below par)</label><input id="kP" value="1.5"></div>
+        <div class="f"><label>Buyback convexity gain ($M/day per $&sup2;)</label><input id="kQ" value="1.2"></div>
+        <div class="f"><label>Max buyback ($M/day)</label><input id="bbMax" value="40"></div>
+        <div class="f"><label>D-gain (velocity boost)</label><input id="kD" value="0.6"></div>
+        <div class="f chk"><input type="checkbox" id="dTerm" checked><label>D-term on</label></div>
+        <div class="f chk"><input type="checkbox" id="pubRule" checked><label>Published reaction function</label></div>
+        <div class="f chk"><input type="checkbox" id="ffwd" checked><label>Rate feed-forward</label></div>
+      </div>
+    </details>
+    <details><summary>Coupon (integral term, both policies)</summary>
+      <div class="grid">
+        <div class="f"><label>Initial coupon (%)</label><input id="c0" value="12.0"></div>
+        <div class="f"><label>Monthly step (bp)</label><input id="stepBp" value="25"></div>
+        <div class="f"><label>Deep-discount step (bp)</label><input id="bigBp" value="50"></div>
+        <div class="f"><label>Coupon ceiling (%)</label><input id="cMax" value="18"></div>
+        <div class="f chk"><input type="checkbox" id="aw" checked><label>Down-steps above par (both)</label></div>
+      </div>
+    </details>
+    <details><summary>Buyback fund (Policy B)</summary>
+      <div class="grid">
+        <div class="f"><label>Initial fund ($M)</label><input id="fund0" value="500"></div>
+        <div class="f"><label>Skim of above-par issuance (%)</label><input id="skim" value="25"></div>
+        <div class="f"><label>Monthly top-up ($M)</label><input id="topup" value="30"></div>
+      </div>
+    </details>
+    <details><summary>Market model</summary>
+      <div class="grid">
+        <div class="f"><label>Base rate (%)</label><input id="r0" value="4.0"></div>
+        <div class="f"><label>Sentiment spread now (%)</label><input id="s0" value="2.9"></div>
+        <div class="f"><label>Spread long-run mean (%)</label><input id="sTheta" value="2.3"></div>
+        <div class="f"><label>Spread reversion (per yr)</label><input id="sKappa" value="1.5"></div>
+        <div class="f"><label>Spread vol (%/&radic;yr)</label><input id="sSigma" value="1.2"></div>
+        <div class="f"><label>Seasoning premium now (%)</label><input id="sea0" value="6.0"></div>
+        <div class="f"><label>Seasoning half-life (yr)</label><input id="seaHL" value="1.5"></div>
+        <div class="f"><label>Par-wall skew premium (%)</label><input id="skewWall" value="0.7"></div>
+        <div class="f"><label>Depth ($M flow per $1 impact)</label><input id="depth" value="60"></div>
+        <div class="f"><label>Micro noise ($/day)</label><input id="sigP" value="0.18"></div>
+      </div>
+    </details>
+    <div class="runRow"><button id="run">Run simulation</button><span id="status"></span></div>
+  </div>
+
+  <div class="panelCard" id="out" style="display:none">
+    <div class="chartTitle">STRC price (dirty) — corridor vs status quo</div>
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--cyan)"></span><b>A</b> status quo</span>
+      <span class="lg"><span class="sw" style="background:var(--btc)"></span><b>B</b> corridor</span>
+      <span class="lg"><span class="sw" style="background:var(--good)"></span>par $100</span>
+      <span class="lg"><span class="sw" style="background:rgba(247,147,26,.35)"></span>corridor band</span>
+    </div>
+    <canvas id="cPrice"></canvas>
+    <div class="chartTitle">Coupon rate (the integral term at work)</div>
+    <canvas id="cCoupon"></canvas>
+    <div class="chartTitle">Policy B plumbing — fund balance, face retired, above-par issuance</div>
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--btc)"></span>fund ($M)</span>
+      <span class="lg"><span class="sw" style="background:var(--good)"></span>face retired ($M)</span>
+      <span class="lg"><span class="sw" style="background:var(--muted)"></span>issued above par ($M)</span>
+    </div>
+    <canvas id="cFund"></canvas>
+    <table class="statsTbl" id="stats"></table>
+    <div class="note" id="noteLine"></div>
+  </div>
+
+  <div id="helpBox"><button id="helpClose" aria-label="Close">&times;</button><div id="helpTxt"></div></div>
+<footer>&copy; 2026 @rationalmnav &middot; Illustrative simulation of a hypothetical mechanism; not a forecast, not investment advice. Site content licensed CC BY-NC-ND 4.0.</footer>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat(String($(id).value).replace(/,/g,''));
+
+/* ---------- seeded RNG ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+/* ---------- parameter collection ---------- */
+function readParams(){
+  return {
+    scenario:$('scenario').value, mode:$('mode').value, hz:num('hz'), seed:num('seed'),
+    cap:num('cap'), atmMax:num('atmMax'), kP:num('kP'), kQ:num('kQ'), bbMax:num('bbMax'),
+    kD:num('kD'), dTerm:$('dTerm').checked, pubRule:$('pubRule').checked, ffwd:$('ffwd').checked,
+    c0:num('c0'), stepBp:num('stepBp'), bigBp:num('bigBp'), cMax:num('cMax'), aw:$('aw').checked,
+    fund0:num('fund0'), skim:num('skim')/100, topup:num('topup'),
+    r0:num('r0'), s0:num('s0'), sTheta:num('sTheta'), sKappa:num('sKappa'), sSigma:num('sSigma'),
+    sea0:num('sea0'), seaHL:num('seaHL'), skewWall:num('skewWall'), depth:num('depth'), sigP:num('sigP')
+  };
+}
+
+/* ---------- scenario overlays: return per-day adjustments ---------- */
+function scenarioOverlay(P,N){
+  const rAdd=new Float64Array(N), sJump=new Float64Array(N);
+  let thetaMul=1, sigmaMul=new Float64Array(N).fill(1), depthMul=new Float64Array(N).fill(1);
+  let seaHL=P.seaHL, attack=false;
+  const yr=252;
+  if(P.scenario==='rate'){ for(let t=0;t<N;t++){ const x=(t-126)/63; rAdd[t]=1.5*Math.min(1,Math.max(0,x)); } }
+  if(P.scenario==='credit'){ if(N>200) sJump[200]=2.5; thetaMul=1.35; }
+  if(P.scenario==='btccrash'){ if(N>150) sJump[150]=3.5; attack=true; }
+  if(P.scenario==='liquidity'){ for(let t=Math.floor(N*0.3);t<Math.min(N,Math.floor(N*0.3)+yr);t++){ depthMul[t]=1/3; sigmaMul[t]=1.6; } }
+  if(P.scenario==='slowseason'){ seaHL=3.0; thetaMul=1.1; }
+  if(P.scenario==='attack'){ if(N>100) sJump[100]=1.5; attack=true; }
+  return {rAdd,sJump,thetaMul,sigmaMul,depthMul,seaHL,attack};
+}
+
+/* ---------- core simulation: one path, one policy ----------
+   policy 'A' = status quo; 'B' = corridor. Shocks (zS, zP arrays) are shared across policies. */
+function simulate(P, policy, ov, zS, zP){
+  const N=zS.length, dt=1/252;
+  const price=new Float64Array(N), coupon=new Float64Array(N),
+        fundArr=new Float64Array(N), retiredArr=new Float64Array(N), issuedArr=new Float64Array(N);
+  let s=P.s0, sea0=P.sea0, c=P.c0, pc=NaN, imp=0, accr=0, vel=0;
+  let fund=(policy==='B')?P.fund0:0, retired=0, issued=0, defenseSpent=0, carrySavedYr=0;
+  let outstandingFace=10489;                       // $M, STRC outstanding (approx)
+  let floorBreaks=0, credLock=0, monthAcc=0, monthCnt=0, lastR=P.r0, pendingFF=0;
+  let daysToEx=10, exFlip=false;                    // twice-monthly ex-dates (10/11-day periods)
+  let atPar=0, aboveFloor=0, sumP=0;
+  const isB=(policy==='B');
+
+  for(let t=0;t<N;t++){
+    /* --- required-yield components --- */
+    const r=P.r0+ov.rAdd[t];
+    const theta=P.sTheta*ov.thetaMul;
+    s+=P.sKappa*(theta-s)*dt + P.sSigma*ov.sigmaMul[t]*Math.sqrt(dt)*zS[t] + ov.sJump[t];
+    s=Math.max(0,s);
+    const sea=sea0*Math.pow(0.5,(t*dt)/ov.seaHL);
+    const skew=isB? Math.max(0.15, P.skewWall*Math.max(0,1-(P.cap-100)/1)) : P.skewWall;
+    const fundHealth=isB? Math.min(1, fund/Math.max(P.fund0,1)) : 0;
+    const cred=(isB&&P.pubRule&&credLock<=0)? 0.45*Math.max(0.25,fundHealth) : 0;
+    const y=Math.max(2, r+s+sea+skew-cred);
+
+    /* --- fundamental & market clean price --- */
+    const ceil=100+100*(c/100)/24+0.6;               // call-enforced ceiling ~ par + half-month accrual + eps
+    const Pf=Math.min(100*c/y, ceil);
+    if(t===0) pc=Pf;
+    pc=Math.max(25, pc + 0.10*(Pf-pc) + P.sigP*zP[t] + imp);
+    const dirty=pc+accr;
+
+    /* --- controller flows (in $M; positive = buying) --- */
+    let flow=0;
+    if(dirty>=100){                                   // issuance side
+      let f;
+      if(isB){ f=Math.min(1,(dirty-100)/Math.max(P.cap-100,0.01)); }
+      else   { f=1; }                                 // A: hard wall, full rate at/above par
+      const iss=P.atmMax*f;
+      flow-=iss; issued+=iss;
+      if(isB) fund+=P.skim*iss;
+    }
+    const gap=100-pc;                                 // CLEAN-price gap to par (accrual sawtooth must not trigger defense)
+    if(isB && gap>0.01){                              // buyback defense: par-anchored, convex (P-term, D-boosted)
+      let want=P.kP*gap + P.kQ*gap*gap;               // minimal just under par, heavy at deep discounts
+      if(P.dTerm && vel<0) want*=(1+P.kD*Math.min(3,-vel/0.05));
+      const buy=Math.min(want,P.bbMax,Math.max(0,fund));
+      if(want>buy+1e-9 && fund<1 && gap>1 && credLock<=0){   // fund exhausted meaningfully below par: public event
+        floorBreaks++; s+=1.0; credLock=63;
+      }
+      fund-=buy; defenseSpent+=buy;
+      const face=buy/Math.max(dirty,1)*100;
+      retired+=face; outstandingFace=Math.max(0,outstandingFace-face);
+      carrySavedYr=retired*(c/100)/100*100/1;         // $M per year of coupons no longer owed (approx on par face)
+      flow+=buy*(P.pubRule?1.8:1.0);                  // published rule: market front-runs the bid
+    }
+    /* speculative-attack extra selling: intensity rises as defenses look thin */
+    if(ov.attack){
+      const ref=isB?99:97;
+      if(dirty<ref+1){
+        const thin=isB? (1-Math.min(1,fund/Math.max(P.fund0,1))) : 1;
+        flow-=Math.min(45, 6*(1+2*thin)*Math.max(0,ref+1-dirty)*0.5);   // attackers have finite capital
+      }
+    }
+    imp=Math.max(-2.5,Math.min(2.5, imp*0.88 + flow/(P.depth*ov.depthMul[t]) ));
+    vel=0.85*vel+0.15*(Pf-pc)*0.10;                   // filtered price velocity proxy
+
+    /* --- accrual & twice-monthly ex-dates --- */
+    accr+=100*(c/100)/252;
+    if(--daysToEx<=0){ accr=0; daysToEx=exFlip?11:10; exFlip=!exFlip; }
+
+    /* --- monthly coupon step (integral term) --- */
+    monthAcc+=dirty; monthCnt++;
+    if(monthCnt>=21){
+      const avg=monthAcc/monthCnt; monthAcc=0; monthCnt=0;
+      if(avg<99.5){ c=Math.min(P.cMax, c+(avg<97?P.bigBp:P.stepBp)/100); }
+      else if(P.aw && avg>=100.15 && c>6){ c=Math.max(6, c-P.stepBp/100); }
+      if(isB && P.ffwd){ const dr=(P.r0+ov.rAdd[t])-lastR; if(Math.abs(dr)>0.05){ c=Math.min(P.cMax,Math.max(6,c+dr)); lastR=P.r0+ov.rAdd[t]; } }
+      if(isB) fund+=P.topup;
+    }
+    if(credLock>0) credLock--;
+
+    /* --- record --- */
+    price[t]=dirty; coupon[t]=c; fundArr[t]=fund; retiredArr[t]=retired; issuedArr[t]=issued;
+    sumP+=dirty;
+    if(dirty>=99.5&&dirty<=100.5) atPar++;
+    if(dirty>=99) aboveFloor++;
+  }
+  return {price,coupon,fundArr,retiredArr,issuedArr,
+    stats:{atPar:atPar/N, aboveFloor:aboveFloor/N, avgP:sumP/N, finalC:c,
+           defenseSpent, retired, carrySavedYr, fundEnd:fund, floorBreaks, issued}};
+}
+
+/* ---------- run one seed: shared shocks, both policies ---------- */
+function runPair(P, seedOffset){
+  const N=Math.round(252*P.hz);
+  const rng=mulberry32((P.seed+seedOffset*7919)|0);
+  const zS=new Float64Array(N), zP=new Float64Array(N);
+  for(let t=0;t<N;t++){ zS[t]=gauss(rng); zP[t]=gauss(rng); }
+  const ov=scenarioOverlay(P,N);
+  const A=simulate(P,'A',ov,zS,zP);
+  const B=simulate(P,'B',ov,zS,zP);
+  return {A,B,N};
+}
+
+/* ---------- charts ---------- */
+function chart(cv, series, opts){
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,W,H);
+  const padL=44,padR=10,padT=10,padB=20;
+  let lo=opts.min!==undefined?opts.min:Infinity, hi=opts.max!==undefined?opts.max:-Infinity;
+  if(opts.min===undefined||opts.max===undefined){
+    for(const sr of series){ const a=sr.band?sr.lo:sr.y; const b=sr.band?sr.hi:sr.y;
+      for(let i=0;i<a.length;i++){ if(isFinite(a[i])){lo=Math.min(lo,a[i]);} if(isFinite(b[i])){hi=Math.max(hi,b[i]);} } }
+    const m=(hi-lo)*0.08||1; lo-=m; hi+=m;
+    if(opts.min!==undefined)lo=opts.min; if(opts.max!==undefined)hi=opts.max;
+  }
+  const n=series[0]?(series[0].band?series[0].lo.length:series[0].y.length):0;
+  const X=i=>padL+(W-padL-padR)*i/Math.max(1,n-1);
+  const Y=v=>padT+(H-padT-padB)*(1-(v-lo)/Math.max(1e-9,hi-lo));
+  ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='#5b6b78'; ctx.strokeStyle='#223040';
+  for(let g=0;g<=4;g++){ const v=lo+(hi-lo)*g/4, yy=Y(v);
+    ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); ctx.globalAlpha=1;
+    ctx.fillText(opts.fmt?opts.fmt(v):v.toFixed(1),4,yy+3); }
+  for(let g=0;g<=Math.min(6,Math.floor(n/252));g++){ const i=g*252; if(i<n){ ctx.fillText(g+'y',X(i)-4,H-6); } }
+  if(opts.hband){ ctx.fillStyle='rgba(247,147,26,.10)';
+    ctx.fillRect(padL,Y(opts.hband[1]),W-padL-padR,Y(opts.hband[0])-Y(opts.hband[1])); }
+  if(opts.hlines) for(const hl of opts.hlines){ ctx.strokeStyle=hl.c; ctx.setLineDash(hl.d||[5,4]);
+    ctx.beginPath(); ctx.moveTo(padL,Y(hl.v)); ctx.lineTo(W-padR,Y(hl.v)); ctx.stroke(); ctx.setLineDash([]); }
+  for(const sr of series){
+    if(sr.band){ ctx.fillStyle=sr.c; ctx.globalAlpha=0.16; ctx.beginPath();
+      ctx.moveTo(X(0),Y(sr.lo[0]));
+      for(let i=1;i<n;i++)ctx.lineTo(X(i),Y(sr.lo[i]));
+      for(let i=n-1;i>=0;i--)ctx.lineTo(X(i),Y(sr.hi[i]));
+      ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; continue; }
+    ctx.strokeStyle=sr.c; ctx.lineWidth=sr.w||1.6; ctx.beginPath();
+    let started=false;
+    for(let i=0;i<n;i++){ const v=sr.y[i]; if(!isFinite(v))continue;
+      if(!started){ctx.moveTo(X(i),Y(v));started=true;} else ctx.lineTo(X(i),Y(v)); }
+    ctx.stroke();
+  }
+}
+
+/* ---------- quantiles across paths ---------- */
+function qBands(paths,N){
+  const lo=new Float64Array(N), md=new Float64Array(N), hi=new Float64Array(N), buf=new Float64Array(paths.length);
+  for(let t=0;t<N;t++){ for(let k=0;k<paths.length;k++)buf[k]=paths[k][t];
+    const srt=Float64Array.from(buf).sort();
+    lo[t]=srt[Math.floor(srt.length*0.10)]; md[t]=srt[srt.length>>1]; hi[t]=srt[Math.floor(srt.length*0.90)]; }
+  return {lo,md,hi};
+}
+const median=a=>{const s=Float64Array.from(a).sort();return s[s.length>>1];};
+
+/* ---------- stats table ---------- */
+function fmtRow(label,a,b,fmt,goodHigh){
+  const fa=fmt(a), fb=fmt(b);
+  let cls='';
+  if(goodHigh!==undefined && isFinite(a)&&isFinite(b)&&a!==b) cls=( (b>a)===goodHigh )?'pos':'neg';
+  return `<tr><td>${label}</td><td class="colA">${fa}</td><td class="colB ${cls}">${fb}</td></tr>`;
+}
+function renderStats(sa,sb,P){
+  const pct=v=>(v*100).toFixed(1)+'%', usd=v=>'$'+v.toFixed(0)+'M', px=v=>'$'+v.toFixed(2), cp=v=>v.toFixed(2)+'%';
+  $('stats').innerHTML=
+   `<tr><th></th><th>A &middot; status quo</th><th>B &middot; corridor</th></tr>`
+   +fmtRow('Time at par ($99.5–100.5)',sa.atPar,sb.atPar,pct,true)
+   +fmtRow('Time at/above $99',sa.aboveFloor,sb.aboveFloor,pct,true)
+   +fmtRow('Average price',sa.avgP,sb.avgP,px,true)
+   +fmtRow('Final coupon',sa.finalC,sb.finalC,cp,false)
+   +fmtRow('Defense deployed',sa.defenseSpent,sb.defenseSpent,usd)
+   +fmtRow('Face retired',sa.retired,sb.retired,usd,true)
+   +fmtRow('Coupon run-rate saved / yr',sa.carrySavedYr,sb.carrySavedYr,usd,true)
+   +fmtRow('Fund at end',sa.fundEnd,sb.fundEnd,usd)
+   +fmtRow('Defense exhaustion events',sa.floorBreaks,sb.floorBreaks,v=>String(Math.round(v)),false)
+   +fmtRow('Issued above par (cum.)',sa.issued,sb.issued,usd);
+}
+
+/* ---------- plain-language help ---------- */
+const HELP={
+scenario:'<b>Scenario</b> — the market weather the test runs in.<br>&bull; <b>Baseline</b>: conditions like today, no extra shocks.<br>&bull; <b>Rate shock</b>: interest rates rise 1.5% during year one, so all yields must compete with higher rates.<br>&bull; <b>Credit scare</b>: the market suddenly gets nervous about the company and demands extra yield for a while.<br>&bull; <b>BTC-crash contagion</b>: a Bitcoin crash spills fear into the preferreds, plus opportunistic sellers pile on.<br>&bull; <b>Liquidity drought</b>: far fewer buyers and sellers for a year, so prices move more on less volume.<br>&bull; <b>Slow seasoning</b>: the market takes twice as long to grow comfortable with this new type of security.<br>&bull; <b>Speculative attack</b>: traders deliberately sell to break the price floor, selling harder when the defense fund looks thin.',
+mode:'<b>Mode</b> — <b>Single path</b> shows one possible future in detail, like a story. <b>Monte Carlo</b> runs 200 different possible futures and shows the typical range (shaded bands cover 80% of outcomes; the line is the middle outcome).',
+hz:'<b>Horizon</b> — how many years the simulation runs.',
+seed:'<b>Seed</b> — controls the random luck. Any whole number works (0, 7, 42, 123456, even negatives) — there are no good or bad choices, and one seed is no more random than another. The same seed always replays the exact same luck, so results are reproducible; change it to any other number to see a different roll of the dice.',
+
+cap:'<b>Issuance ramp top</b> — new STRC is sold gradually between $100 and this price: a trickle just above $100, full speed at this level. The default of $101 respects the call feature: since the company can redeem near par, the price cannot sustainably trade much above it anyway. Under the current real-world policy, issuance instead runs at full speed the moment price touches $100, which caps the price at par exactly.',
+atmMax:'<b>Max ATM issuance</b> — the most new STRC (in $ millions) the company sells per day when issuance is running at full speed.',
+kP:'<b>Buyback linear gain</b> — buybacks begin the moment the price (measured excluding accrued dividend, so the twice-monthly dividend mechanics don&rsquo;t trigger them) slips below par. This knob sets the gentle part: $ millions per day of buying for every $1 below par. Minimal near $99 by design.',
+kQ:'<b>Buyback convexity gain</b> — the heavy part: buying that grows with the <i>square</i> of the distance below par, so a $10 discount draws far more than ten times the bid of a $1 discount. Deep discounts are met with the heaviest buying — which is also where each dollar retires the most face value.',
+bbMax:'<b>Max buyback</b> — a daily ceiling on buyback spending, no matter how far price falls.',
+kD:'<b>D-gain</b> — the &ldquo;derivative&rdquo; control knob: how much extra buying kicks in when the price is falling <i>fast</i>, to catch a drop early instead of waiting for it to get deep.',
+dTerm:'<b>D-term on</b> — when checked, the defense reacts to the <i>speed</i> of a decline, not just its depth. Uncheck to defend on price level alone.',
+pubRule:'<b>Published reaction function</b> — the company announces its exact buy/sell rules publicly. Traders then buy ahead of the known floor bid (they profit by front-running it), which means the market does much of the defending and each fund dollar works harder. Uncheck to see how much more a secretive defense costs.',
+ffwd:'<b>Rate feed-forward</b> — when general interest rates move, the dividend rate adjusts promptly to keep pace, instead of waiting for the price to sag and the slow monthly ratchet to react.',
+c0:'<b>Initial coupon</b> — the annual dividend rate at the start, as a percent of the $100 par value. STRC pays this out in twice-monthly installments.',
+stepBp:'<b>Monthly step</b> — how much the dividend rate rises (in basis points; 25 bp = 0.25%) at a monthly adjustment when the price has been running below par.',
+bigBp:'<b>Deep-discount step</b> — the larger monthly increase used when the price has been far below par (under $97).',
+cMax:'<b>Coupon ceiling</b> — the dividend rate is never raised above this, no matter what.',
+aw:'<b>Down-steps above par</b> — the dividend rate is stepped back down once the price has been holding at or above par, an ability the company already has. Control engineers call this anti-windup: without it, every stress would permanently ratchet the dividend bill upward. Applies to both policies here.',
+fund0:'<b>Initial fund</b> — cash in the STRC Buyback Fund at the start, in $ millions. This is a separate pool from the USD Reserve, which is publicly committed to dividends and is never touched here.',
+skim:'<b>Skim</b> — the share of every dollar raised selling STRC <i>above</i> par that is diverted into the buyback fund. The corridor&rsquo;s top side finances its bottom side.',
+topup:'<b>Monthly top-up</b> — additional cash added to the fund each month from other company sources.',
+r0:'<b>Base rate</b> — the general level of interest rates (think short-term Treasury / SOFR). Every yield in the model is built on top of this.',
+s0:'<b>Sentiment spread now</b> — the extra yield the market currently demands out of general nervousness about the company and the instrument, beyond rates and the other premiums.',
+sTheta:'<b>Spread long-run mean</b> — the level the sentiment spread drifts back toward over time when nothing bad is happening.',
+sKappa:'<b>Spread reversion</b> — how quickly sentiment returns to normal after a scare. Higher = faster forgetting.',
+sSigma:'<b>Spread vol</b> — how jumpy market sentiment is day to day.',
+sea0:'<b>Seasoning premium now</b> — extra yield demanded because STRC is a new, unproven type of security. It fades only as the instrument survives and builds a track record; no dividend increase can buy it away quickly.',
+seaHL:'<b>Seasoning half-life</b> — the years it takes for that newness premium to fade by half.',
+skewWall:'<b>Par-wall skew premium</b> — extra yield demanded because of the current policy&rsquo;s hard issuance wall at $100. With unlimited supply at par, the price can never rise above $100 but can fall freely below it: all downside, no upside. Investors charge for holding that lopsided (negatively skewed) bet. Opening an issuance ramp above par restores some upside and shrinks this premium &mdash; the one part of the discount the corridor design fixes almost for free.',
+depth:'<b>Depth</b> — how thick the market is: the $ millions of net buying (or selling) it takes to move the price by $1. Thinner markets (lower number) move more on the same flow.',
+sigP:'<b>Micro noise</b> — the random day-to-day price wiggle from ordinary trading, in dollars.'
+};
+document.addEventListener('click',e=>{
+  const lb=e.target.closest?e.target.closest('.f label'):null;
+  if(lb){
+    const box=lb.closest('.f'); const inp=box?box.querySelector('input,select'):null;
+    const key=inp?inp.id:null;
+    if(key&&HELP[key]){ $('helpTxt').innerHTML=HELP[key]; $('helpBox').style.display='block'; }
+    return;
+  }
+  if(e.target.id==='helpClose'){ $('helpBox').style.display='none'; }
+});
+
+/* ---------- main run ---------- */
+$('run').addEventListener('click',()=>{
+  const P=readParams();
+  $('status').textContent='running…';
+  setTimeout(()=>{
+    try{
+      $('out').style.display='block';        // must be visible BEFORE drawing: hidden canvases have zero size
+      if(P.mode==='single'){
+        const {A,B,N}=runPair(P,0);
+        chart($('cPrice'),[
+          {y:A.price,c:'#46C7E6'},{y:B.price,c:'#F7931A',w:2}],
+          {hband:[99,P.cap],hlines:[{v:100,c:'#57C98A'}],fmt:v=>'$'+v.toFixed(0)});
+        chart($('cCoupon'),[{y:A.coupon,c:'#46C7E6'},{y:B.coupon,c:'#F7931A',w:2}],{fmt:v=>v.toFixed(1)+'%'});
+        chart($('cFund'),[{y:B.fundArr,c:'#F7931A',w:2},{y:B.retiredArr,c:'#57C98A'},{y:B.issuedArr,c:'#6b7a88'}],{fmt:v=>'$'+v.toFixed(0)});
+        renderStats(A.stats,B.stats,P);
+        $('noteLine').textContent='Single path, seed '+P.seed+'. Both policies experience the identical shock sequence; every difference is the mechanism.';
+      } else {
+        const M=200, pA=[],pB=[],cA=[],cB=[],fB=[]; let N=0; const sA=[],sB=[];
+        for(let k=0;k<M;k++){ const r=runPair(P,k); N=r.N;
+          pA.push(r.A.price); pB.push(r.B.price); cA.push(r.A.coupon); cB.push(r.B.coupon); fB.push(r.B.fundArr);
+          sA.push(r.A.stats); sB.push(r.B.stats); }
+        const qA=qBands(pA,N), qB=qBands(pB,N), qcA=qBands(cA,N), qcB=qBands(cB,N), qf=qBands(fB,N);
+        chart($('cPrice'),[
+          {band:true,lo:qA.lo,hi:qA.hi,c:'#46C7E6'},{band:true,lo:qB.lo,hi:qB.hi,c:'#F7931A'},
+          {y:qA.md,c:'#46C7E6'},{y:qB.md,c:'#F7931A',w:2}],
+          {hband:[99,P.cap],hlines:[{v:100,c:'#57C98A'}],fmt:v=>'$'+v.toFixed(0)});
+        chart($('cCoupon'),[
+          {band:true,lo:qcA.lo,hi:qcA.hi,c:'#46C7E6'},{band:true,lo:qcB.lo,hi:qcB.hi,c:'#F7931A'},
+          {y:qcA.md,c:'#46C7E6'},{y:qcB.md,c:'#F7931A',w:2}],{fmt:v=>v.toFixed(1)+'%'});
+        chart($('cFund'),[{band:true,lo:qf.lo,hi:qf.hi,c:'#F7931A'},{y:qf.md,c:'#F7931A',w:2}],{fmt:v=>'$'+v.toFixed(0)});
+        const med=arr=>{const o={};for(const k of Object.keys(arr[0]))o[k]=median(arr.map(s=>s[k]));return o;}
+        renderStats(med(sA),med(sB),P);
+        $('noteLine').textContent='200 paths; bands are p10–p90, lines are medians. Stats are per-metric medians. Shocks are pairwise identical across policies.';
+      }
+      $('status').textContent='done';
+    }catch(e){ $('status').textContent='error: '+e.message; }
+  },30);
+});
+</script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "775dfd21de2c496b9190612266e25980"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
