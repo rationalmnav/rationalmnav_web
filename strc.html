@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STRC Corridor Control Simulator — rationalmnav.com</title>
+<title>STRC PID Control Simulator — rationalmnav.com</title>
 <style>
 :root{
   --bg:#0b0f14; --panel:#12181f; --panel2:#0e141b; --line:#223040;
@@ -60,7 +60,7 @@ footer{color:var(--muted);font-size:11.5px;margin-top:26px;font-family:var(--mon
 <body>
 <div class="wrap">
   <div class="eyebrow">rationalmnav.com &middot; companion tool</div>
-  <h1>STRC Corridor Control Simulator</h1>
+  <h1>STRC PID Control Simulator</h1>
   <div class="sub">A PID-style price-control system for a par-seeking preferred stock, tested against the current policy under identical market shocks. Policy A = status quo (hard issuance wall at par, ratchet-only coupon, no buybacks). Policy B = PID controller (issuance ramp above par, par-anchored progressive buybacks below par, coupon integral with anti-windup). Not affiliated with Strategy. Educational only.</div>
 
   <div class="panelCard">
@@ -84,7 +84,7 @@ footer{color:var(--muted);font-size:11.5px;margin-top:26px;font-family:var(--mon
         <div class="f"><label>Seed</label><input id="seed" value="7"></div>
       </div>
     </details>
-    <details><summary>Corridor controller (Policy B)</summary>
+    <details><summary>PID controller (Policy B)</summary>
       <div class="grid">
         <div class="f"><label>Issuance ramp top ($)</label><input id="cap" value="101"></div>
         <div class="f"><label>Max ATM issuance ($M/day)</label><input id="atmMax" value="8"></div>
@@ -131,12 +131,12 @@ footer{color:var(--muted);font-size:11.5px;margin-top:26px;font-family:var(--mon
   </div>
 
   <div class="panelCard" id="out" style="display:none">
-    <div class="chartTitle">STRC price (dirty) — corridor vs status quo</div>
+    <div class="chartTitle">STRC price (dirty) — PID controller vs status quo</div>
     <div class="legend">
       <span class="lg"><span class="sw" style="background:var(--cyan)"></span><b>A</b> status quo</span>
-      <span class="lg"><span class="sw" style="background:var(--btc)"></span><b>B</b> corridor</span>
+      <span class="lg"><span class="sw" style="background:var(--btc)"></span><b>B</b> PID controller</span>
       <span class="lg"><span class="sw" style="background:var(--good)"></span>par $100</span>
-      <span class="lg"><span class="sw" style="background:rgba(247,147,26,.35)"></span>corridor band</span>
+      <span class="lg"><span class="sw" style="background:rgba(247,147,26,.35)"></span>control band</span>
     </div>
     <canvas id="cPrice"></canvas>
     <div class="chartTitle">Coupon rate (the integral term at work)</div>
@@ -194,7 +194,7 @@ function scenarioOverlay(P,N){
 }
 
 /* ---------- core simulation: one path, one policy ----------
-   policy 'A' = status quo; 'B' = corridor. Shocks (zS, zP arrays) are shared across policies. */
+   policy 'A' = status quo; 'B' = PID controller. Shocks (zS, zP arrays) are shared across policies. */
 function simulate(P, policy, ov, zS, zP){
   const N=zS.length, dt=1/252;
   const price=new Float64Array(N), coupon=new Float64Array(N),
@@ -358,7 +358,7 @@ function fmtRow(label,a,b,fmt,goodHigh){
 function renderStats(sa,sb,P){
   const pct=v=>(v*100).toFixed(1)+'%', usd=v=>'$'+v.toFixed(0)+'M', px=v=>'$'+v.toFixed(2), cp=v=>v.toFixed(2)+'%';
   $('stats').innerHTML=
-   `<tr><th></th><th>A &middot; status quo</th><th>B &middot; corridor</th></tr>`
+   `<tr><th></th><th>A &middot; status quo</th><th>B &middot; PID</th></tr>`
    +fmtRow('Time at par ($99.5–100.5)',sa.atPar,sb.atPar,pct,true)
    +fmtRow('Time at/above $99',sa.aboveFloor,sb.aboveFloor,pct,true)
    +fmtRow('Average price',sa.avgP,sb.avgP,px,true)
@@ -393,7 +393,7 @@ bigBp:'<b>Deep-discount step</b> — the larger monthly increase used when the p
 cMax:'<b>Coupon ceiling</b> — the dividend rate is never raised above this, no matter what.',
 aw:'<b>Down-steps above par</b> — the dividend rate is stepped back down once the price has been holding at or above par, an ability the company already has. Control engineers call this anti-windup: without it, every stress would permanently ratchet the dividend bill upward. Applies to both policies here.',
 fund0:'<b>Initial fund</b> — cash in the STRC Buyback Fund at the start, in $ millions. This is a separate pool from the USD Reserve, which is publicly committed to dividends and is never touched here.',
-skim:'<b>Skim</b> — the share of every dollar raised selling STRC <i>above</i> par that is diverted into the buyback fund. The corridor&rsquo;s top side finances its bottom side.',
+skim:'<b>Skim</b> — the share of every dollar raised selling STRC <i>above</i> par that is diverted into the buyback fund. The controller&rsquo;s issuance side helps finance its buyback side.',
 topup:'<b>Monthly top-up</b> — additional cash added to the fund each month from other company sources.',
 r0:'<b>Base rate</b> — the general level of interest rates (think short-term Treasury / SOFR). Every yield in the model is built on top of this.',
 s0:'<b>Sentiment spread now</b> — the extra yield the market currently demands out of general nervousness about the company and the instrument, beyond rates and the other premiums.',
@@ -402,7 +402,7 @@ sKappa:'<b>Spread reversion</b> — how quickly sentiment returns to normal afte
 sSigma:'<b>Spread vol</b> — how jumpy market sentiment is day to day.',
 sea0:'<b>Seasoning premium now</b> — extra yield demanded because STRC is a new, unproven type of security. It fades only as the instrument survives and builds a track record; no dividend increase can buy it away quickly.',
 seaHL:'<b>Seasoning half-life</b> — the years it takes for that newness premium to fade by half.',
-skewWall:'<b>Par-wall skew premium</b> — extra yield demanded because of the current policy&rsquo;s hard issuance wall at $100. With unlimited supply at par, the price can never rise above $100 but can fall freely below it: all downside, no upside. Investors charge for holding that lopsided (negatively skewed) bet. Opening an issuance ramp above par restores some upside and shrinks this premium &mdash; the one part of the discount the corridor design fixes almost for free.',
+skewWall:'<b>Par-wall skew premium</b> — extra yield demanded because of the current policy&rsquo;s hard issuance wall at $100. With unlimited supply at par, the price can never rise above $100 but can fall freely below it: all downside, no upside. Investors charge for holding that lopsided (negatively skewed) bet. Opening an issuance ramp above par restores some upside and shrinks this premium &mdash; the one part of the discount the PID design fixes almost for free.',
 depth:'<b>Depth</b> — how thick the market is: the $ millions of net buying (or selling) it takes to move the price by $1. Thinner markets (lower number) move more on the same flow.',
 sigP:'<b>Micro noise</b> — the random day-to-day price wiggle from ordinary trading, in dollars.'
 };
