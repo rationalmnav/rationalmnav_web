@@ -151,20 +151,21 @@
         <div id="quoteStatus" style="margin-top:5px;font-size:12px;color:var(--muted)"></div>
       </div>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="64000"></div>
-        <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="63000"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="64500"></div>
+        <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="63455"></div>
         <div class="f"><label>BTC Trailing 200-wk realized CAGR (%/yr)</label><input id="gTrail" value="30.2"></div>
+        <div class="f"><label>Today's BTC fair price (USD; default = de-lagged 200-WMA)</label><input id="fairPx" value="107114"></div>
         <div class="derived" id="derivedSnap" style="flex-basis:100%"></div>
-        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="100.77"></div>
-        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="88.58"></div>
-        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="401283594"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="95"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="86"></div>
+        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="408829486"></div>
       </div>
     </details>
     <details>
       <summary>Strategy balance sheet</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="843775"></div>
-        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="3000000000"></div>
+        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="3225000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
       <div class="seclabel" style="margin-top:12px">Debt — convertible notes (notional, $M)</div>
@@ -358,7 +359,7 @@
 const $ = id => document.getElementById(id);
 const num = id => parseFloat(String($(id).value).replace(/,/g,''));
 // thousands-separator formatting for the large currency/count fields
-const COMMA_FIELDS = ['btcSpot','wma200','mstrPrice','strcPriceNow','shares','btcHeld','sAcc','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
+const COMMA_FIELDS = ['btcSpot','wma200','fairPx','mstrPrice','strcPriceNow','shares','btcHeld','sAcc','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
 const fmt = v => Number.isFinite(v) ? v.toLocaleString('en-US',{maximumFractionDigits:2}) : '';
 function fmtField(id){ const v=num(id); if(Number.isFinite(v)) $(id).value=fmt(v); }
 function formatAll(){ COMMA_FIELDS.forEach(fmtField); }
@@ -428,12 +429,17 @@ function runModel(P){
   const recordPath=!!P.recordPath, pcol=recordPath?new Float64Array(n):null, tcol=recordPath?new Float64Array(n):null;
   const premiumPath=recordPath?new Float64Array(steps):null; let premiumPathT=null;
 
-  // 200-WMA fair-value anchor: de-lag the observed WMA by the analytic factor gT/(1-e^{-gT}) (T=200wk, g=realized
-  // trailing growth). The spot/fair gap d0=ln(spot/F0) decays with half-life disHl, applied identically to every
-  // model OUTSIDE its stochastic machinery; anchor off -> F0=spot, d0=0 (from-spot regime).
+  // Fair-value anchor: today's fair BTC price is the user-adjustable fairPx input (defaulted to the de-lagged
+  // 200-WMA, i.e. WMA x gT/(1-e^{-gT}) with T=200wk and g=trailing realized growth, but editable to any view).
+  // The spot/fair gap d0=ln(spot/F0) decays with half-life disHl, applied identically to every model OUTSIDE its
+  // stochastic machinery; anchor off -> F0=spot, d0=0 (from-spot regime).
   const T_W=200*7/365.25;
   let F0=P.btcSpot, d0=0;
-  if(P.anchorWma&&P.wma200>0){ const gT=Math.max(P.gTrail,1e-6)*T_W; F0=P.wma200*gT/(1-Math.exp(-gT)); d0=Math.log(P.btcSpot/F0); }
+  if(P.anchorWma){
+    if(P.fairPx>0){ F0=P.fairPx; }
+    else if(P.wma200>0){ const gT=Math.max(P.gTrail,1e-6)*T_W; F0=P.wma200*gT/(1-Math.exp(-gT)); }
+    d0=Math.log(P.btcSpot/F0);
+  }
   const kapDis=Math.LN2/Math.max(P.disHl,1e-6);
   // feasible cycle/regime estimators (observables only), seeded from entry data
   const kWma=1-Math.pow(0.5,dt/1.33), kGs=1-Math.pow(0.5,dt/2.0), kVol=1-Math.pow(0.5,dt/1.0), estLag=1.33/Math.LN2;
@@ -869,6 +875,7 @@ async function fetchLiveBtc(){
     $('btcSpot').value=Math.round(spot);
     $('wma200').value=Math.round(wma);
     $('gTrail').value=(cagr*100).toFixed(1);
+    syncFair();
     updateDerived();
     st.textContent='Updated '+new Date().toLocaleString()+' via '+src+' — spot $'+Math.round(spot).toLocaleString()
       +', 200-WMA $'+Math.round(wma).toLocaleString()+', trailing CAGR '+(cagr*100).toFixed(1)+'%/yr.';
@@ -981,17 +988,25 @@ function updateDerived(){
   updateSnapDerived();
 }
 function updateSnapDerived(){
-  // today's fair BTC price: de-lagged 200-WMA (F0 = WMA * gT/(1-e^-gT), T=200wk, g=trailing realized CAGR)
-  const spot=num('btcSpot'), wma=num('wma200'), g=num('gTrail')/100;
+  // today's fair BTC price: the fairPx input (defaulted to the de-lagged 200-WMA, user-adjustable)
+  const spot=num('btcSpot'), fair=num('fairPx');
   let html='';
-  if(wma>0&&g>0&&isFinite(spot)){
-    const gT=g*200*7/365.25, F0=wma*gT/(1-Math.exp(-gT)), dev=(spot/F0-1)*100;
-    html=`<span class="d">fair BTC price (de-lagged 200-WMA) <b>$${Math.round(F0).toLocaleString()}</b></span>`+
-         `<span class="d">spot vs fair <b>${dev>=0?'+':''}${dev.toFixed(0)}%</b></span>`;
+  if(fair>0&&isFinite(spot)){
+    const dev=(spot/fair-1)*100;
+    html=`<span class="d">spot vs fair <b>${dev>=0?'+':''}${dev.toFixed(0)}%</b></span>`;
   }
   $('derivedSnap').innerHTML=html;
 }
-['btcSpot','wma200','gTrail','mstrPrice','shares','btcHeld','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
+// keep fairPx synced to the de-lagged 200-WMA default until the user edits it directly
+let fairTouched=false;
+function syncFair(){
+  if(fairTouched) return;
+  const wma=num('wma200'), g=num('gTrail')/100;
+  if(wma>0&&g>0){ const gT=g*200*7/365.25; $('fairPx').value=fmt(Math.round(wma*gT/(1-Math.exp(-gT)))); }
+}
+['wma200','gTrail'].forEach(id=>$(id).addEventListener('input',syncFair));
+$('fairPx').addEventListener('input',()=>{fairTouched=true;});
+['btcSpot','wma200','gTrail','fairPx','mstrPrice','shares','btcHeld','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'].forEach(id=>$(id).addEventListener('input',updateDerived));
 COMMA_FIELDS.forEach(id=>$(id).addEventListener('blur',()=>fmtField(id)));
 formatAll();          // apply thousands separators to the pre-filled values
 refreshFairValue();   // populate the derived readout on load
@@ -1212,11 +1227,11 @@ function makeShareImageInner(v){
   // right column: the market snapshot driving the fair-value anchor
   const RXC=W/2+40, fmt$=v=>'$'+Math.round(v).toLocaleString('en-US');
   let fairBtc=d.btcSpot;
-  if(d.anchorWma&&d.wma200>0){ const gT=Math.max(d.gTrail,1e-6)*(200*7/365.25); fairBtc=d.wma200*gT/(1-Math.exp(-gT)); }
+  if(d.anchorWma){ if(d.fairPx>0){ fairBtc=d.fairPx; } else if(d.wma200>0){ const gT=Math.max(d.gTrail,1e-6)*(200*7/365.25); fairBtc=d.wma200*gT/(1-Math.exp(-gT)); } }
   const gapPct=(d.btcSpot/fairBtc-1)*100;
   beliefAt(RXC,'BTC spot price',fmt$(d.btcSpot),true);
   beliefAt(RXC,'BTC 200-week moving average',fmt$(d.wma200),true);
-  beliefAt(RXC,'BTC fair price (de-lagged WMA)',fmt$(fairBtc)+'  ('+(gapPct>=0?'+':'')+gapPct.toFixed(0)+'% spot vs fair)',true);
+  beliefAt(RXC,'BTC fair price (today)',fmt$(fairBtc)+'  ('+(gapPct>=0?'+':'')+gapPct.toFixed(0)+'% spot vs fair)',true);
   y=Math.max(y,y2)+4;
   // ---- verdict panel (dynamic height, tool-matched colors) ----
   const fvCol=d.fair>=d.pnow?C.good:C.btc;
@@ -1413,7 +1428,7 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
       ymEq:rationalMnav, ymEv:entMnav, ymNet:netMnav,
       fair:res.fairValueMed, pnow:res.priceNow, upside:(res.fairValueMed/res.priceNow-1)*100,
       med, medExcess:med-rp, out, rp, horizon:P.horizon,
-      btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, anchorWma:P.anchorWma,
+      btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, fairPx:P.fairPx, anchorWma:P.anchorWma,
       eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity,
       bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT,
       isOpt:(RM_VIEWS&&view===RM_VIEWS.opt), tauStar:RM_TAUSTAR};
@@ -1438,7 +1453,7 @@ $('tgOpt').addEventListener('click',()=>{ if(RM_VIEWS&&RM_VIEWS.opt){ setViewAct
 $('run').addEventListener('click',()=>{
   const P={
     btcSpot:num('btcSpot'), mstrPrice:num('mstrPrice'), shares:num('shares'),
-    wma200:num('wma200'), gTrail:num('gTrail')/100, anchorWma:$('anchorWma').checked, disHl:num('disHl'),
+    wma200:num('wma200'), gTrail:num('gTrail')/100, fairPx:num('fairPx'), anchorWma:$('anchorWma').checked, disHl:num('disHl'),
     btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
     sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
