@@ -160,21 +160,21 @@
         <div id="quoteStatus" style="margin-top:5px;font-size:12px;color:var(--muted)"></div>
       </div>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="65000"></div>
-        <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="63455"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="63400"></div>
+        <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="63900"></div>
         <div class="f"><label>BTC Trailing 200-wk realized CAGR (%/yr)</label><input id="gTrail" value="30.2"></div>
-        <div class="f"><label>Today's BTC fair price (USD; default = de-lagged 200-WMA)</label><input id="fairPx" value="107114"></div>
+        <div class="f"><label>Today's BTC fair price (USD; default = de-lagged 200-WMA)</label><input id="fairPx" value="107865"></div>
         <div class="derived" id="derivedSnap" style="flex-basis:100%"></div>
-        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="95"></div>
-        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="88.50"></div>
-        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="414258922"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="94.86"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="92.32"></div>
+        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="417267691"></div>
       </div>
     </details>
     <details>
       <summary>Strategy balance sheet</summary>
       <div class="grid">
-        <div class="f"><label>BTC held</label><input id="btcHeld" value="843775"></div>
-        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="3750000000"></div>
+        <div class="f"><label>BTC held</label><input id="btcHeld" value="842138"></div>
+        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="4000000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
       <div class="seclabel" style="margin-top:12px">Debt — convertible notes (notional, $M)</div>
@@ -189,7 +189,7 @@
       <div class="seclabel" style="margin-top:12px">Preferred stock (notional, $M)</div>
       <div class="grid">
         <div class="f"><label>STRF</label><input id="preStrf" value="1284"></div>
-        <div class="f"><label>STRC</label><input id="preStrc" value="10460.6"></div>
+        <div class="f"><label>STRC</label><input id="preStrc" value="10369.4"></div>
         <div class="f"><label>STRE</label><input id="preStre" value="883"></div>
         <div class="f"><label>STRK</label><input id="preStrk" value="1402"></div>
         <div class="f"><label>STRD</label><input id="preStrd" value="1402"></div>
@@ -232,12 +232,12 @@
       <summary>Amplification Assumptions</summary>
       <div class="grid" style="margin-top:10px">
         <div class="f"><label>Countercyclical amplification (feasible estimator: target = base·e<sup>−x̂</sup>, x̂ from trailing WMA proxy)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="ampDyn" checked style="width:auto"> enable</label></div>
-        <div class="f"><label>Amp target at fair value</label><input id="ampDynBase" value="0.33"></div>
-        <div class="f"><label>Amp floor (mania)</label><input id="ampDynLo" value="0.20"></div>
-        <div class="f"><label>Amp ceiling (bear bottom)</label><input id="ampDynHi" value="0.60"></div>
+        <div class="f"><label>Amp target at fair value (BTC Reserve ÷ Net Reserve)</label><input id="ampDynBase" value="1.34"></div>
+        <div class="f"><label>Amp floor (mania)</label><input id="ampDynLo" value="1.15"></div>
+        <div class="f"><label>Amp ceiling (bear bottom)</label><input id="ampDynHi" value="2.10"></div>
         <div class="f"><label>Fractional-Kelly carry cap (0 = off)</label><input id="kellyFrac" value="0.50"></div>
-        <div class="f"><label>Static amplification target (if countercyclical off)</label><input id="ampTarget" value="0.45"></div>
-        <div class="f"><label>Absolute issuance ceiling</label><input id="ampHigh" value="0.75"></div>
+        <div class="f"><label>Static amplification target (if countercyclical off)</label><input id="ampTarget" value="1.60"></div>
+        <div class="f"><label>Absolute issuance ceiling</label><input id="ampHigh" value="3.00"></div>
       </div>
     </details>
     <details>
@@ -252,7 +252,7 @@
     <details>
       <summary>USD Reserve Assumptions</summary>
       <div class="grid" style="margin-top:10px">
-        <div class="f"><label>Reserve target — high (months of div)</label><input id="resHigh" value="30"></div>
+        <div class="f"><label>Reserve target clamp (months; endogenous target capped here)</label><input id="resHigh" value="48"></div>
         <div class="f"><label>Reserve refill trigger (months)</label><input id="resLow" value="12"></div>
         <div class="f"><label>Reserve op. floor (months)</label><input id="resFloorM" value="3"></div>
         <div class="f"><label>Last-resort BTC sale (sell BTC to fund dividend before pausing)</label><label style="display:flex;align-items:center;gap:7px;padding-top:6px"><input type="checkbox" id="btcForcedSaleOn" checked style="width:auto"> enable</label></div>
@@ -294,8 +294,8 @@
     <details>
       <summary>STRC Assumptions</summary>
       <div class="grid" style="margin-top:10px">
-        <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="5.5"></div>
-        <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="4.0"></div>
+        <div class="f"><label>STRC baseline spread over SOFR (%)</label><input id="strcSpreadFloor" value="3.5"></div>
+        <div class="f"><label>STRC spread × reserve-runway sensitivity (%)</label><input id="strcRunwaySens" value="12"></div>
         <div class="f"><label>STRC spread × coverage sensitivity (%)</label><input id="strcCovSens" value="16"></div>
         <div class="f"><label>STRC spread × volatility sensitivity (%)</label><input id="strcVolSens" value="9"></div>
         <div class="f"><label>STRC coupon willingness ceiling (%)</label><input id="strcCmaxWilling" value="15"></div>
@@ -407,6 +407,8 @@ const CONVERT_META = [
 const PREF_META = ['preStrf','preStrc','preStre','preStrk','preStrd'];   // STRC (preStrc) is the variable-coupon tranche
 const convertsNow     = ()=>CONVERT_META.map(m=>[m.put, num(m.id)*1e6, m.strike, m.cpn, m.call]);
 const convertTotalNow = ()=>CONVERT_META.reduce((a,m)=>a+num(m.id)*1e6,0);
+const ampToEll = A=>{ const bv=num('btcHeld')*num('btcSpot'); const r=bv>0?num('reserve')/bv:0;
+  return Math.min(Math.max(1-1/Math.max(A,1.001)+r,0),0.95); };   // company amp -> internal claims/value ratio
 const prefParNow      = ()=>PREF_META.reduce((a,id)=>a+num(id)*1e6,0);
 const strcParNow      = ()=>num('preStrc')*1e6;
 // Fixed-coupon tranches (STRC excluded — its coupon is variable). Coupons are at par; blended rate derives from the mix.
@@ -674,18 +676,33 @@ function runModel(P){
       arr[i]*=(1+P.arrComp*dt);
       // reserve target band scales with the preferred dividend obligation (up to 30 months of coverage)
       const annualDiv=cpn[i]*S[i];
-      const Rhigh=(P.resHigh/12)*annualDiv, Rlow=(P.resLow/12)*annualDiv, Rfloor=(P.resFloorM/12)*annualDiv;
+      /* === FLOATING RESERVE TARGET (endogenous confidence requirement) ===
+         The reserve exists to hold STRC's required yield at its par-clearing level. Invert the spread model:
+         the runway term sens*e^(-runway/tau) may consume only the BUDGET left after the other spread parts,
+         given the current coupon (price ~ par when required yield <= coupon/0.995). Because the runway term is
+         exponential, confidence-per-dollar has DIMINISHING RETURNS (12->24 months buys ~e times more spread
+         relief than 24->36), and beyond the par-clearing runway the marginal benefit is ~zero (the price is
+         capped near par by the call) while the opportunity cost of idle dollars vs BTC stays positive -- so the
+         optimal reserve is the requirement itself: the ceiling is ENDOGENOUS. P.resHigh (months) survives only
+         as a sanity clamp for stress regimes where the inversion demands extreme coverage. */
+      const spreadOther=P.strcSpreadFloor+P.strcCovSens*Math.max(amp-P.strcCovFloor,0)+P.strcVolSens*volEx-ratingCredit-baselCredit;
+      const parBudget=cStrc[i]/0.995-r10[i]-spreadOther;
+      const reqRunwayYr = parBudget>=P.strcRunwaySens ? 0
+                        : (parBudget<=1e-4 ? P.resHigh/12
+                        : -P.strcRunwayTau*Math.log(parBudget/P.strcRunwaySens));
+      const tgtM=Math.min(Math.max(reqRunwayYr*12+3,P.resLow),P.resHigh);   // +3mo buffer; floor = stated 12-mo minimum
+      const Rtarget=(tgtM/12)*annualDiv, Rlow=(P.resLow/12)*annualDiv, Rfloor=(P.resFloorM/12)*annualDiv;
       const healthy=(!paused[i])&&(mnav>P.engineMin);
       // Rebuild the reserve via COMMON issuance, gated on capital ACCESS (deep coverage), NOT on the STRC ATM --
       // else a below-par STRC could never refund the reserve that would lift it back to par (a false deadlock).
-      if(healthy && R[i]<Rlow){
+      if(healthy && R[i]<Rtarget){
         let access=(P.ampHigh-amp)/Math.max(P.ampHigh-P.ampLow,1e-9); if(access<0)access=0; else if(access>1)access=1;
-        const refill=access*P.resRefillSpeed*(Rhigh-R[i])*dt; N[i]+=refill/Math.max(price,1e-9); R[i]+=refill;
+        const refill=access*P.resRefillSpeed*(Rtarget-R[i])*dt; N[i]+=refill/Math.max(price,1e-9); R[i]+=refill;
       }
       // At a sub-1 mNAV, common issuance is closed but the firm refills obligations by SELLING COINS (the June-2026
       // playbook). Non-dilutive but shrinks the stack; realized BY carries the cost. Collateral-constrained.
       if(!paused[i] && mnav<=P.engineMin && R[i]<Rlow){
-        let sellUsd=P.resRefillSpeed*(Rhigh-R[i])*dt;
+        let sellUsd=P.resRefillSpeed*(Rlow-R[i])*dt;      // deep-discount regime: rebuild only to the 12-mo minimum
         const maxSell=Math.max(held[i]*btc[i]-(S[i]+D[i])/P.ampHigh,0);
         if(sellUsd>maxSell)sellUsd=maxSell;
         held[i]-=sellUsd/Math.max(btc[i],1e-9); btcSoldDiv[i]+=sellUsd/Math.max(btc[i],1e-9); R[i]+=sellUsd;
@@ -695,7 +712,11 @@ function runModel(P){
       let cvCoupon=0; for(let j=0;j<P.converts.length;j++){ if(convActive[j][i]) cvCoupon+=P.converts[j][1]*P.converts[j][3]/4; }
       const capUsd=P.maxCommonAtm*bv;                         // below-NAV common issuance the market can place this qtr
       let need=Math.max(divq+cvCoupon-P.fcf,0);
-      const draw=Math.min(need,Math.max(R[i]-Rfloor,0)); R[i]-=draw; need-=draw;
+      /* === FUNDING PRIORITY (company commitment, 2026): dividends and interest are funded from ONGOING
+         SOURCES FIRST -- the ATM waterfall below -- and the USD Reserve is drawn only when those channels are
+         closed or insufficient (the stress case). In normal times the reserve therefore FLOATS at its
+         confidence target instead of sawtoothing between a trigger and a ceiling. The reserve is spent on
+         dividends and interest ONLY -- buybacks, STRC retirement, and BTC purchases are funded elsewhere. */
       // ATM: accretive above par (uncapped); DEFENSIVE below par while enterprise mNAV >= 1.0 (dynamic
       // parity gate), capped by market depth
       const wfFloor=evParityEq(i);
@@ -704,6 +725,8 @@ function runModel(P){
         const fund=(mnav>1.0)?need:Math.min(need,capUsd);
         N[i]+=fund/Math.max(price,1e-9); need-=fund; wfFunded=fund>0;
       }
+      // STRESS DRAW: issuance closed (below the parity gate) or capped out -> the reserve does its actual job
+      if(need>0){ const draw=Math.min(need,Math.max(R[i]-Rfloor,0)); R[i]-=draw; need-=draw; }
       // LAST-RESORT BTC SALE: (a) reserve exhausted + (b) below the parity gate (dilution no longer raises net
       // backing) + (c) STRC ATM shut -> sell BTC (cover dividend only)
       if(P.btcForcedSaleOn && need>0 && mnav<wfFloor && !strcAvail){
@@ -855,7 +878,7 @@ function runModel(P){
   const bpsExitMed=stackExitMed/Math.max(sharesExitMed,1);            // BPS that ties out: stack / shares
   return {out, pPause:pPause/n, pUnder:pUnder/n, pForced:pForced/n, pStrc:pStrc/n,
           pSaleDiv:pSaleDiv/n, soldDivMed:pctl(soldDivSorted,0.5),
-          soldFrac:soldSum/n/P.btcHeld, mnav0, amp0:(P.prefPar+D0)/(P.btcHeld*P.btcSpot),
+          soldFrac:soldSum/n/P.btcHeld, mnav0, amp0:(P.btcHeld*P.btcSpot)/Math.max(P.btcHeld*P.btcSpot-(P.prefPar+D0)+P.reserve,1),
           strcTightAvg:tightSum/n/strcCounted, strcWideAvg:wideSum/n/strcCounted,
           strcOpenAvg:openSum/n/strcCounted, btcViaStrcMed, btcSoldBbMed, bpsExitMed, stackExitMed, thetaExitMed, sharesExitMed,
           bpsEntry:P.btcHeld/Math.max(P.shares,1),
@@ -990,10 +1013,11 @@ $('liveRefresh')&&$('liveRefresh').addEventListener('change',function(){
 
 function updateDerived(){
   const mnav0=mnavOf(num('mstrPrice'),num('shares'),num('btcHeld'),num('btcSpot'));
-  const amp0=(prefParNow()+convertTotalNow())/(num('btcHeld')*num('btcSpot'));
+  const bv0=num('btcHeld')*num('btcSpot');
+  const amp0=bv0/Math.max(bv0-(prefParNow()+convertTotalNow())+num('reserve'),1);   // BTC Reserve / Net Reserve
   $('derived').innerHTML=
     `<span class="d">entry mNAV <b>${mnav0.toFixed(2)}×</b></span>`+
-    `<span class="d">amplification <b>${(amp0*100).toFixed(1)}%</b></span>`;
+    `<span class="d">amplification <b>${amp0.toFixed(2)}x</b></span>`;
   updateSnapDerived();
 }
 function updateSnapDerived(){
@@ -1257,12 +1281,13 @@ function makeShareImageInner(v){
     {t:'your hurdle.'}];
   const fSats=v=>isFinite(v)?(v*1e8/1000).toFixed(1)+'k':'n/a', f2=v=>isFinite(v)?v.toFixed(2)+'×':'n/a';
   const _atH=d.isOpt?'at τ*':'at exit';
-  const statsLine='Sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' '+_atH+'   ·   '
-    +'equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' '+_atH;
+  const statsLine='Gross sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' '+_atH+'   ·   '
+    +'net sats/share '+fSats(d.netBpsEntry)+' → '+fSats(d.netBpsExit)+' '+_atH;
+  const statsLine2='equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' '+_atH;
   const PX=M+22, PW=W-2*M-44, CX=M+(W-2*M)/2;
   const SUB=26;                                  // enlarged verdict sub-line size (was 22)
   const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);   // measure headline height (centered draw below)
-  const panelH=56+(hEnd+40)+(2*SUB+22)+40+34+28;      // headline + two centered sub-lines + stats row
+  const panelH=56+(hEnd+40)+(2*SUB+22)+40+34+28+30;   // headline + two centered sub-lines + two stats rows
   ctx.fillStyle=C.panel; roundRect(ctx,M,y,W-2*M,panelH,14); ctx.fill();
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace'; ctx.textAlign='left'; ctx.fillText('VERDICT',PX,y+34);
   // headline centered (wraps if needed)
@@ -1273,7 +1298,8 @@ function makeShareImageInner(v){
   let l2=e1+SUB+12; const e2=drawSegsCentered(subLine2,CX,l2,SUB,PW,SUB+10);
   // stats line centered below
   ctx.fillStyle=C.txt; ctx.font='600 19px ui-monospace,monospace'; ctx.textAlign='center';
-  ctx.fillText(statsLine,CX,e2+40); ctx.textAlign='left';
+  ctx.fillText(statsLine,CX,e2+40);
+  ctx.fillText(statsLine2,CX,e2+70); ctx.textAlign='left';
   y+=panelH+22;
   // ---- three rational mNAVs ----
   ctx.fillStyle=C.muted; ctx.font='600 15px ui-monospace,monospace';
@@ -1399,11 +1425,22 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
     const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
     // Capital-structure reframings of the same fair value. Senior claims = preferred par + convert principal, net of cash.
     const grossBTC0=P.btcHeld*P.btcSpot;
-    const senior0=P.prefPar+P.convertTotal-P.reserve;    // preferred par + convert principal, net of cash
+    const senior0=P.prefPar+P.convertTotal-P.reserve-itmPar-(strkITM?strkPar:0);   // OTM notional only, net of USD reserve
     const sSr=senior0/grossBTC0;                          // senior claims as a share of gross BTC value
     // Enterprise/net-assets count the convertibles ONCE (as debt), so their equity leg uses the EX-CONVERT
     // share count, not the assumed-diluted count (which already folds in the conversion shares).
-    const xcRatio=P.sharesExCv/P.shares;                 // ex-convert / diluted (derived)
+    // Company convention (New Metrics, Jul 2026): the net family divides by FDSO — basic + options + RSUs
+    // + ONLY in-the-money converts and ITM STRK — while OUT-of-the-money convertible instruments (and STRK,
+    // conv $1,000) are instead deducted at notional in Net BTC. ITM instruments contribute shares and drop
+    // out of the claims; OTM instruments contribute claims and drop out of the shares. STRK's par is in the
+    // preferred stack, so its shares are excluded here whenever it is OTM (this also fixes the prior
+    // double-count of STRK par + STRK shares).
+    const strkPar=num('preStrk')*1e6, strkShares=strkPar/1000;          // STRK conv price $1,000 (8-K 7/20/26)
+    let itmPar=0, itmSh=0, cvShTot=0;
+    for(const c of P.converts){ const sh=c[1]/c[2]; cvShTot+=sh; if(P.mstrPrice>=c[2]){ itmPar+=c[1]; itmSh+=sh; } }
+    const strkITM=P.mstrPrice>=1000;
+    const fdso0=Math.max(P.shares-(cvShTot-itmSh)-(strkITM?0:strkShares),1);
+    const xcRatio=fdso0/P.shares;                        // FDSO / assumed-diluted
     const ratEqXc=rationalMnav*xcRatio;                  // rational equity mNAV, ex-convert leg
     const entEqXc=res.mnav0*xcRatio;                     // entry   equity mNAV, ex-convert leg
     const entMnav=ratEqXc+sSr;                           // rational enterprise mNAV: (ex-convert equity + senior) / gross BTC
@@ -1413,9 +1450,12 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
     // Exit reframings use the ACTUAL terminal capital structure (median components): senior = preferred par
     // + arrears + remaining convert principal, net of the terminal reserve, over terminal gross BTC value; the
     // equity leg strips only the conversion shares of tranches still unresolved at exit.
-    const seniorT=res.SExitMed+res.arrExitMed+res.DExitMed-res.RExitMed;
+    const pxT=res.mktExit*res.bvExitMed/Math.max(res.sharesExitMed,1);      // implied terminal MSTR price
+    const strkITMT=pxT>=1000;
+    const seniorT=res.SExitMed+res.arrExitMed+res.DExitMed-res.RExitMed-(strkITMT?strkPar:0);
     const sSrT=seniorT/Math.max(res.bvExitMed,1);
-    const xcRatioT=Math.max(res.sharesExitMed-res.cvShExitMed,1)/Math.max(res.sharesExitMed,1);
+    const fdsoT=Math.max(res.sharesExitMed-res.cvShExitMed-(strkITMT?0:strkShares),1);
+    const xcRatioT=fdsoT/Math.max(res.sharesExitMed,1);
     const exitEqXc=res.mktExit*xcRatioT;                 // exit equity mNAV, ex-convert leg (terminal basis)
     const exitEnt=exitEqXc+sSrT;                         // exit enterprise mNAV (terminal capital structure)
     const exitNet=(sSrT<1)?exitEqXc/(1-sSrT):Infinity;   // exit net-assets mNAV (terminal capital structure)
@@ -1423,8 +1463,11 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
       cell('MSTR fair value (P(beat)=50%)','$'+fvMed.toFixed(0),fvMed>=pnow?'pos':'neg')+
       cell('Upside to fair value',(upside>=0?'+':'')+upside.toFixed(0)+'%',upside>=0?'pos':'neg')+
       mnavMatrix(rationalMnav,entMnav,netMnav,res.mnav0,entryEnt,entryNet,res.mktExit,exitEnt,exitNet,P.horizon)+
-      cell('BPS at Entry',fmtSats(res.bpsEntry))+
-      cell('BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
+      cell('Gross BPS at Entry',fmtSats(res.bpsEntry))+
+      cell('Gross BPS at Exit',fmtSats(res.bpsExitMed),res.bpsExitMed>=res.bpsEntry?'pos':'neg')+
+      cell('Net BPS at Entry',fmtSats(res.bpsEntry*Math.max(1-sSr,0)/xcRatio))+
+      cell('Net BPS at Exit',fmtSats(res.bpsExitMed*Math.max(1-sSrT,0)/xcRatioT),
+           res.bpsExitMed*Math.max(1-sSrT,0)/xcRatioT>=res.bpsEntry*Math.max(1-sSr,0)/xcRatio?'pos':'neg')+
       cell('BTC Stack at Exit',fmtStack(res.stackExitMed),res.stackExitMed>=P.btcHeld?'pos':'neg')+
       cell('BTC Accumulated via STRC Over Horizon',fmtStack(res.btcViaStrcMed*P.btcHeld))+
       cell('BTC Sold to Buyback MSTR',fmtStack(res.btcSoldBbMed*P.btcHeld))+
@@ -1440,6 +1483,7 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
       btcSpot:P.btcSpot, wma200:P.wma200, gTrail:P.gTrail, fairPx:P.fairPx, anchorWma:P.anchorWma,
       eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity,
       bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT,
+      netBpsEntry:res.bpsEntry*Math.max(1-sSr,0)/xcRatio, netBpsExit:res.bpsExitMed*Math.max(1-sSrT,0)/xcRatioT,
       isOpt:(RM_VIEWS&&view===RM_VIEWS.opt), tauStar:RM_TAUSTAR};
 }
 function setViewToggle(P,tauStar){
@@ -1467,7 +1511,11 @@ $('run').addEventListener('click',()=>{
     sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
     sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
-    ampTarget:num('ampTarget'), ampDyn:$('ampDyn').checked, ampDynBase:num('ampDynBase'), ampDynLo:num('ampDynLo'), ampDynHi:num('ampDynHi'), kellyFrac:num('kellyFrac'), ampHigh:num('ampHigh'), ampLow:0.30,
+    // Amplification inputs are entered in the company's July 2026 metric (BTC Reserve / Net Reserve, a ratio
+    // >= ~1). The simulator's internal control variable remains the claims/gross-value ratio; convert at the
+    // boundary using today's reserve share, ell = 1 - 1/A + reserve/grossBTC, so the calibrated behavior of
+    // the countercyclical controller is preserved exactly at the current balance sheet.
+    ampTarget:ampToEll(num('ampTarget')), ampDyn:$('ampDyn').checked, ampDynBase:ampToEll(num('ampDynBase')), ampDynLo:ampToEll(num('ampDynLo')), ampDynHi:ampToEll(num('ampDynHi')), kellyFrac:num('kellyFrac'), ampHigh:ampToEll(num('ampHigh')), ampLow:0.30,
     sigRef:num('sigNow'),
     resHigh:num('resHigh'), resLow:num('resLow'), resFloorM:num('resFloorM'),
     sharesExCv:num('shares')-CONVERT_META.reduce((a,m)=>a+num(m.id)*1e6/m.strike,0),   // derived: diluted − if-converted
@@ -1498,7 +1546,7 @@ $('run').addEventListener('click',()=>{
     strcWeight:strcParNow()/Math.max(prefParNow(),1), fixedPrefCpn:fixedPrefCpnNow(),
     strcPar:100, strcPriceNow:num("strcPriceNow"), strcCouponNow:num('strcCouponNow')/100,
     strcRateFloor:0.04, strcRateCeil:num('strcRateCeil')/100,
-    strcSpreadFloor:num('strcSpreadFloor')/100, strcRunwaySens:num('strcRunwaySens')/100, strcRunwayTau:0.60,
+    strcSpreadFloor:num('strcSpreadFloor')/100, strcRunwaySens:num('strcRunwaySens')/100, strcRunwayTau:2.0,   // calibrated Aug 2026: STRC $92.32 at ~28mo coverage; par at ~2.5-3yr
     strcCovSens:num('strcCovSens')/100, strcCovFloor:0.30, strcVolSens:num('strcVolSens')/100, strcVolRef:0.55,
     strcDistress:0.040, strcDistressSale:0.020, strcSpreadMin:0.030,
     strcCmaxWilling:num('strcCmaxWilling')/100, strcAffordFloorYr:0.60, strcCouponStep:0.0075,
