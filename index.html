@@ -1283,7 +1283,8 @@ function makeShareImageInner(v){
   const _atH=d.isOpt?'at τ*':'at exit';
   const statsLine='Gross sats/share '+fSats(d.bpsEntry)+' → '+fSats(d.bpsExit)+' '+_atH+'   ·   '
     +'net sats/share '+fSats(d.netBpsEntry)+' → '+fSats(d.netBpsExit)+' '+_atH;
-  const statsLine2='equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' '+_atH;
+  const statsLine2='equity mNAV '+f2(d.mnavEntry)+' → '+f2(d.mnavExit)+' '+_atH+'   ·   '
+    +'net-assets mNAV '+f2(d.netMnavEntry)+' → '+f2(d.netMnavExit)+' '+_atH;
   const PX=M+22, PW=W-2*M-44, CX=M+(W-2*M)/2;
   const SUB=26;                                  // enlarged verdict sub-line size (was 22)
   const hEnd=drawSegs(headSegs,PX,0,PW,40,31,true);   // measure headline height (centered draw below)
@@ -1482,6 +1483,7 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
       eq0:res.mnav0, ev0:res.mnav0*xcRatio+sSr, net0:(sSr<1)?res.mnav0*xcRatio/(1-sSr):Infinity,
       bpsEntry:res.bpsEntry, bpsExit:res.bpsExitMed, mnavEntry:res.mnav0, mnavExit:res.premiumPathT,
       netBpsEntry:res.bpsEntry*Math.max(1-sSr,0)/xcRatio, netBpsExit:res.bpsExitMed*Math.max(1-sSrT,0)/xcRatioT,
+      netMnavEntry:entryNet, netMnavExit:exitNet,
       isOpt:(RM_VIEWS&&view===RM_VIEWS.opt), tauStar:RM_TAUSTAR};
 }
 function setViewToggle(P,tauStar){
