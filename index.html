@@ -1425,10 +1425,6 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
     const rationalMnav=mnavOf(fvMed,P.shares,P.btcHeld,P.btcSpot);   // fair price x diluted shares / total BTC value
     // Capital-structure reframings of the same fair value. Senior claims = preferred par + convert principal, net of cash.
     const grossBTC0=P.btcHeld*P.btcSpot;
-    const senior0=P.prefPar+P.convertTotal-P.reserve-itmPar-(strkITM?strkPar:0);   // OTM notional only, net of USD reserve
-    const sSr=senior0/grossBTC0;                          // senior claims as a share of gross BTC value
-    // Enterprise/net-assets count the convertibles ONCE (as debt), so their equity leg uses the EX-CONVERT
-    // share count, not the assumed-diluted count (which already folds in the conversion shares).
     // Company convention (New Metrics, Jul 2026): the net family divides by FDSO — basic + options + RSUs
     // + ONLY in-the-money converts and ITM STRK — while OUT-of-the-money convertible instruments (and STRK,
     // conv $1,000) are instead deducted at notional in Net BTC. ITM instruments contribute shares and drop
@@ -1441,6 +1437,8 @@ const cell=(k,v,cls='')=>`<div class="stat"><div class="k">${k}</div><div class=
     const strkITM=P.mstrPrice>=1000;
     const fdso0=Math.max(P.shares-(cvShTot-itmSh)-(strkITM?0:strkShares),1);
     const xcRatio=fdso0/P.shares;                        // FDSO / assumed-diluted
+    const senior0=P.prefPar+P.convertTotal-P.reserve-itmPar-(strkITM?strkPar:0);   // OTM notional only, net of USD reserve
+    const sSr=senior0/grossBTC0;                          // senior claims as a share of gross BTC value
     const ratEqXc=rationalMnav*xcRatio;                  // rational equity mNAV, ex-convert leg
     const entEqXc=res.mnav0*xcRatio;                     // entry   equity mNAV, ex-convert leg
     const entMnav=ratEqXc+sSr;                           // rational enterprise mNAV: (ex-convert equity + senior) / gross BTC
