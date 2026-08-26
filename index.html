@@ -160,21 +160,22 @@
         <div id="quoteStatus" style="margin-top:5px;font-size:12px;color:var(--muted)"></div>
       </div>
       <div class="grid">
-        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="64305"></div>
+        <div class="f"><label>BTC spot (USD)</label><input id="btcSpot" value="78000"></div>
         <div class="f"><label>BTC 200-week MA (USD)</label><input id="wma200" value="63900"></div>
         <div class="f"><label>BTC Trailing 200-wk realized CAGR (%/yr)</label><input id="gTrail" value="30.2"></div>
         <div class="f"><label>Today's BTC fair price (USD; default = de-lagged 200-WMA)</label><input id="fairPx" value="107865"></div>
         <div class="derived" id="derivedSnap" style="flex-basis:100%"></div>
-        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="97.33"></div>
-        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="94.35"></div>
-        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="423849533"></div>
+        <div class="f"><label>MSTR share price (USD)</label><input id="mstrPrice" value="119"></div>
+        <div class="f"><label>STRC price (USD)</label><input id="strcPriceNow" value="96.18"></div>
+        <div class="f"><label>MSTR Diluted shares outstanding</label><input id="shares" value="445557924"></div>
       </div>
     </details>
     <details>
       <summary>Strategy balance sheet</summary>
       <div class="grid">
         <div class="f"><label>BTC held</label><input id="btcHeld" value="840447"></div>
-        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="4650000000"></div>
+        <div class="f"><label>USD reserve (USD)</label><input id="reserve" value="5100000000"></div>
+        <div class="f"><label>USD Cash (general-purpose liquidity, USD)</label><input id="usdCash" value="1590000000"></div>
         <div class="f"><label>STRC current coupon (%)</label><input id="strcCouponNow" value="12"></div>
       </div>
       <div class="seclabel" style="margin-top:12px">Debt — convertible notes (notional, $M)</div>
@@ -189,7 +190,7 @@
       <div class="seclabel" style="margin-top:12px">Preferred stock (notional, $M)</div>
       <div class="grid">
         <div class="f"><label>STRF</label><input id="preStrf" value="1284"></div>
-        <div class="f"><label>STRC</label><input id="preStrc" value="10254.2"></div>
+        <div class="f"><label>STRC</label><input id="preStrc" value="9972.2"></div>
         <div class="f"><label>STRE</label><input id="preStre" value="883"></div>
         <div class="f"><label>STRK</label><input id="preStrk" value="1402"></div>
         <div class="f"><label>STRD</label><input id="preStrd" value="1402"></div>
@@ -368,7 +369,7 @@
 const $ = id => document.getElementById(id);
 const num = id => parseFloat(String($(id).value).replace(/,/g,''));
 // thousands-separator formatting for the large currency/count fields
-const COMMA_FIELDS = ['btcSpot','wma200','fairPx','mstrPrice','strcPriceNow','shares','btcHeld','sAcc','reserve','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
+const COMMA_FIELDS = ['btcSpot','wma200','fairPx','mstrPrice','strcPriceNow','shares','btcHeld','sAcc','reserve','usdCash','paths','cv2028','cv2030b','cv2029','cv2030a','cv2031','cv2032','preStrf','preStrc','preStre','preStrk','preStrd'];
 const fmt = v => Number.isFinite(v) ? v.toLocaleString('en-US',{maximumFractionDigits:2}) : '';
 function fmtField(id){ const v=num(id); if(Number.isFinite(v)) $(id).value=fmt(v); }
 function formatAll(){ COMMA_FIELDS.forEach(fmtField); }
@@ -1507,7 +1508,7 @@ $('run').addEventListener('click',()=>{
   const P={
     btcSpot:num('btcSpot'), mstrPrice:num('mstrPrice'), shares:num('shares'),
     wma200:num('wma200'), gTrail:num('gTrail')/100, fairPx:num('fairPx'), anchorWma:$('anchorWma').checked, disHl:num('disHl'),
-    btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'),
+    btcHeld:num('btcHeld'), prefPar:prefParNow(), converts:convertsNow(), convertTotal:convertTotalNow(), reserve:num('reserve'), usdCash:num('usdCash'),   // USD Cash: captured as an input; not yet wired into the simulation dynamics or the net-claims offset
     sAcc:num('sAcc'), kPerm:num('kPerm'), kTemp:num('kTemp'), pConc:num('pConc'), carryMargin:num('carryMargin')/100,
     horizon:num('horizon'), rp:num('rp')/100,
     sigNow:num('sigNow'), volDecay:num('volDecay'), revert:num('revert'),
